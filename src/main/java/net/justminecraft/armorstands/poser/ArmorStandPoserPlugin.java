@@ -21,4 +21,7 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
         getLogger().info("Just Armor Stands Poser Disabled!");
     }
 
+    private void registerCommands() {
+        getCommand("armorstand").setExecutor(new ArmorStand(this));
+    }
 }
