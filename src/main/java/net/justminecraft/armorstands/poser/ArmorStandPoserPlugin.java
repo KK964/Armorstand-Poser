@@ -23,5 +23,6 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
 
     private void registerCommands() {
         getCommand("armorstand").setExecutor(new ArmorStand(this));
+        getCommand("setarmorstand").setExecutor(new SetArmorStandCommand(this));
     }
 }
