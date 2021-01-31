@@ -1,36 +1,17 @@
-// BIG Thanks to tutsplus.com
-// http://code.tutsplus.com/tutorials/webgl-with-threejs-basics--net-35688
-// for helping me getting started
-
-//Stuff for rendering
 var DEG2RAD = Math.PI / 180;
 var width, height, renderer, scene, camera;
 var clock = new THREE.Clock;
 var rotY = 0, rotX = 0;
 var matWood = new THREE.MeshLambertMaterial({ color: 0x826841 });
-//var matWood = new THREE.MeshLambertMaterial({ color: 0x826841, transparent: true, opacity: 0.5 }); //For testing the mesh alignment
 var matStone = new THREE.MeshLambertMaterial({ color: 0xadadad });
 var matTransparentStone = new THREE.MeshLambertMaterial({ color: 0xadadad });
 matTransparentStone.opacity = 0.8;
 matTransparentStone.transparent = true;
 var viewCenter = new THREE.Vector3(0,0,0);
-// Meshes
-// The ones marked with //* are not real meshes, but contain a child (or more) which gets rendered.
-// This is done, so these can easily be rotated around an accurate pivot point.
-var mBasePlate;
-var mBody; //*
-var mHead; //*
-var mSkull;
-var mLegLeft; //*
-var mLegRight; //*
-var mArmLeft; //*
-var mArmRight; //*
-var armorstand, armorstandWrapper; //Group all the other elements
+var mBasePlate, mBody, mHead, mSkull, mLegLeft, mLegRight, mArmLeft, mArmRight;
+var armorstand, armorstandWrapper
 
-
-//DATA -> Stuff that we'll use to generate the command. Fetched from the controls.
-
-var mcVersion;
+var mcVersion = "1.16";
 
 var invisible = false;
 var invulnerable = false;
@@ -40,8 +21,6 @@ var noGravity = false;
 var showArms = false;
 var small = false;
 var marker = false;
-var centercorrected = false;
-var give = false;
 
 var useEquipment;
 var equipHandRight;
@@ -92,27 +71,27 @@ Point = {
 };
 
 jQuery.fn.selectAndCopyText = function(){
-    // https://stackoverflow.com/a/9976413/1456971
-    this.find('input').each(function() {
-        if($(this).prev().length == 0 || !$(this).prev().hasClass('p_copy')) {
-            $('<p class="p_copy" style="position: absolute; z-index: -1;"></p>').insertBefore($(this));
-        }
-        $(this).prev().html($(this).val());
-    });
+	// https://stackoverflow.com/a/9976413/1456971
+	this.find('input').each(function() {
+		if($(this).prev().length == 0 || !$(this).prev().hasClass('p_copy')) {
+			$('<p class="p_copy" style="position: absolute; z-index: -1;"></p>').insertBefore($(this));
+		}
+		$(this).prev().html($(this).val());
+	});
 
-    var doc = document;
-    var element = this[0];
-    if (doc.body.createTextRange) {
-        var range = document.body.createTextRange();
-        range.moveToElementText(element);
-        range.select();
-    } else if (window.getSelection) {
-        var selection = window.getSelection();
-        var range = document.createRange();
-        range.selectNodeContents(element);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
+	var doc = document;
+	var element = this[0];
+	if (doc.body.createTextRange) {
+		var range = document.body.createTextRange();
+		range.moveToElementText(element);
+		range.select();
+	} else if (window.getSelection) {
+		var selection = window.getSelection();
+		var range = document.createRange();
+		range.selectNodeContents(element);
+		selection.removeAllRanges();
+		selection.addRange(range);
+	}
 
 	document.execCommand("copy");
 };
@@ -129,21 +108,17 @@ $(document).ready(function(){
 		return "Unsaved changes will NOT be saved. Exit anyways?";
 	};
 
-	// Copy code on click
-	$(".code").click(function(){
-		$("#code").selectAndCopyText();
-	});
-
 	//Stuff to handle and update input
 	$("input").on("input", function(){
 		handleInput();
 	});
 	$(':checkbox, #equipCustomHeadMode, #equipmode, #mcversion').change(function() {
-    	handleInput();
+		handleInput();
 	});
 
+	//updateURL
 
-	//Handle rotating with mouse
+
 	$("#gl")
 	.mousedown(function(event){
 		mouseDownX = event.pageX;
@@ -161,8 +136,7 @@ $(document).ready(function(){
 	});
 
 	//Hide elements
-	$("#getcommandblock").hide();
-	$("#saveandload").hide();
+	$("#credit").hide();
 	$("#troubleshooting").hide();
 	$("#inputarms").hide();
 	$("#customequipment").hide();
@@ -171,18 +145,17 @@ $(document).ready(function(){
 
 	//Show elements
 	$("#namecustomization").show();
-	$("#centercorrected").show();
 
-    //Initialize colorpickers
-    $('.colorfield').colpick({
-        colorScheme:'light',
-        layout:'hex',
-        color:'ff8800',
-        onSubmit:function(hsb,hex,rgb,el) {
-            $(el).css('background-color', '#'+hex);
-            $(el).colpickHide();
-            handleInput();
-        }
+	//Initialize colorpickers
+	$('.colorfield').colpick({
+		colorScheme:'light',
+		layout:'hex',
+		color:'ff8800',
+		onSubmit:function(hsb,hex,rgb,el) {
+			$(el).css('background-color', '#'+hex);
+			$(el).colpickHide();
+			handleInput();
+		}
 	});
 
 	helmetList = $("#list-helmet").find("option");
@@ -338,17 +311,14 @@ function setup(){
 // Write stuff from input into variables
 function handleInput(){
 
-	mcVersion = $("#mcversion").val();
-
 	invisible = getCheckBoxInput("invisible");
 	invulnerable = getCheckBoxInput("invulnerable");
-    persistencerequired = getCheckBoxInput("persistencerequired");
+	persistencerequired = getCheckBoxInput("persistencerequired");
 	noBasePlate = getCheckBoxInput("nobaseplate");
 	noGravity = getCheckBoxInput("nogravity");
 	showArms = getCheckBoxInput("showarms");
 	small = getCheckBoxInput("small");
 	marker = getCheckBoxInput("marker");
-	centercorrected = getCheckBoxInput("center-corrected");
 
 	useEquipment = getCheckBoxInput("useequipment");
 	equipHandRight = getInput("equipHandRight");
@@ -359,10 +329,10 @@ function handleInput(){
 	equipHelmet = getInput("equipHelmet");
 	equipCustomHeadMode = $("#equipCustomHeadMode").val();
 
-    equipColorShoes = $("#shoecolor").css("background-color");
-    equipColorLeggings = $("#leggingscolor").css("background-color");
-    equipColorChestplate = $("#chestplatecolor").css("background-color");
-    equipColorHelmet = $("#helmetcolor").css("background-color");
+	equipColorShoes = $("#shoecolor").css("background-color");
+	equipColorLeggings = $("#leggingscolor").css("background-color");
+	equipColorChestplate = $("#chestplatecolor").css("background-color");
+	equipColorHelmet = $("#helmetcolor").css("background-color");
 
 	customName = getInput("customname");
 	showCustomName = getCheckBoxInput("showcustomname");
@@ -373,7 +343,6 @@ function handleInput(){
 	nameStrikethrough = getCheckBoxInput("namestrikethrough");
 
 	useDisabledSlots = getCheckBoxInput("usedisabledslots");
-	give = getCheckBoxInput("slashgive");
 
 	body.set(getRangeInput("bodyX"), getRangeInput("bodyY"), getRangeInput("bodyZ"));
 	head.set(getRangeInput("headX"), getRangeInput("headY"), getRangeInput("headZ"));
@@ -412,33 +381,28 @@ function updateUI(){
 	if(useEquipment){
 		$("#customequipment").slideDown();
 		// Hide left hand item input for minecraft 1.8
-		if(mcVersion == "1.8"){
-			$("#equipHandLeft").hide();
-		}
-		else{
-			$("#equipHandLeft").show();
-		}
+		$("#equipHandLeft").show();
 	}
 	else
 		$("#customequipment").slideUp();
 
-    //Different colorinputs for armorparts
-    if(isLeatherArmor(equipShoes))
-        $("#shoecolor").slideDown();
-    else
-        $("#shoecolor").slideUp();
-    if(isLeatherArmor(equipLeggings))
-        $("#leggingscolor").slideDown();
-    else
-        $("#leggingscolor").slideUp();
-    if(isLeatherArmor(equipChestplate))
-        $("#chestplatecolor").slideDown();
-    else
-        $("#chestplatecolor").slideUp();
-    if(isLeatherArmor(equipHelmet))
-        $("#helmetcolor").slideDown();
-    else
-        $("#helmetcolor").slideUp();
+	//Different colorinputs for armorparts
+	if(isLeatherArmor(equipShoes))
+		$("#shoecolor").slideDown();
+	else
+		$("#shoecolor").slideUp();
+	if(isLeatherArmor(equipLeggings))
+		$("#leggingscolor").slideDown();
+	else
+		$("#leggingscolor").slideUp();
+	if(isLeatherArmor(equipChestplate))
+		$("#chestplatecolor").slideDown();
+	else
+		$("#chestplatecolor").slideUp();
+	if(isLeatherArmor(equipHelmet))
+		$("#helmetcolor").slideDown();
+	else
+		$("#helmetcolor").slideUp();
 
 	// Link to minecraft-heads.com
 	if(equipCustomHeadMode == "givecode"){
@@ -450,57 +414,20 @@ function updateUI(){
 
 	// Show disabled slots
 	if(useDisabledSlots) {
-		// Hide offhand disabled slot buttons for versions below 1.13
-		switch (mcVersion) {
-			case "1.13":
-			case "1.11":
-			case "1.9":
-			case "1.8":
-				$(".sprite.offhand").hide();
-				$("#dO").hide();
-				$("#rO").hide();
-				$("#pO").hide();
-				break;
+		$(".sprite.offhand").show();
+		$("#dO").show();
+		$("#rO").show();
+		$("#pO").show();
 
-			default:
-				$(".sprite.offhand").show();
-				$("#dO").show();
-				$("#rO").show();
-				$("#pO").show();
-				break;
-
-		}
 		$("#disabledslots").slideDown();
 	}
 	else
 		$("#disabledslots").slideUp();
 
-	//Hide 1.13 features for 1.12 and lower.
-	switch (mcVersion) {
-		case "1.11":
-		case "1.9":
-		case "1.8":
-			$("#namecustomization").hide();
-			$("#centercorrected").hide();
-			break;
-
-		default:
-			$("#namecustomization").show();
-			$("#centercorrected").show();
-			break;
-	}
+	$("#namecustomization").show();
 
 	// Generate code
 	$("#code").text(generateCode());
-	// Show hint, when command is too long
-	let characterLimit = (mcVersion == "1.8" || mcVersion == "1.9") ? 100 : 256;
-	if(generateCode().length > characterLimit){
-		$("#codeinfo").slideDown();
-	}
-	else{
-		$("#codeinfo").slideUp();
-	}
-
 
 	// Rotate 3D Stuff
 	// y and z rotation needs to be inverted
@@ -512,11 +439,11 @@ function updateUI(){
 	setRotation(mArmRight, rightArm);
 	armorstand.rotation.y = -rotation * DEG2RAD;
 
-    // Scale model, depending on small variable
-    if(small)
-        armorstand.scale.set(0.6, 0.6, 0.6);
-    else
-        armorstand.scale.set(1, 1, 1);
+	// Scale model, depending on small variable
+	if(small)
+		armorstand.scale.set(0.6, 0.6, 0.6);
+	else
+		armorstand.scale.set(1, 1, 1);
 
 	//Set Visibility
 	mArmRight.visible = mArmLeft.visible = showArms;
@@ -525,24 +452,7 @@ function updateUI(){
 }
 
 function generateCode(){
-	var code = "/summon armor_stand ~ ~ ~ {" //in 1.13, positions are no longer center-corrected. Adding .5 makes it centered. However for players it is already center-corrected
-
-	if (!give) {
-		// Old entity name
-		if(mcVersion == "1.8" || mcVersion == "1.9"){
-			code = "/summon ArmorStand ~ ~ ~ {";
-		} else if (mcVersion == "1.11") {
-			code = "/summon armor_stand ~ ~ ~ {";
-		} else {
-			centercorrected ? code = "/summon armor_stand ~ ~-0.5 ~ {" : code = "/summon armor_stand ~ ~ ~ {"
-		}
-	} else {
-		if(mcVersion == "1.8" || mcVersion == "1.9" || mcVersion == "1.11"){
-			code = "/give @p minecraft:armor_stand 1 0 {EntityTag:{";
-		} else {
-			code = "/give @p armor_stand{EntityTag:{"
-		}
-	}
+	var code = "{" 
 
 	var tags = [];
 
@@ -551,8 +461,8 @@ function generateCode(){
 		tags.push("Invisible:1b");
 	if(invulnerable)
 		tags.push("Invulnerable:1b");
-    if(persistencerequired)
-        tags.push("PersistenceRequired:1b");
+	if(persistencerequired)
+		tags.push("PersistenceRequired:1b");
 	if(noBasePlate)
 		tags.push("NoBasePlate:1b");
 	if(noGravity)
@@ -570,94 +480,40 @@ function generateCode(){
 
 	// Equipment
 	if(useEquipment){
-		// Old 1.8 Equipment format
-		if(mcVersion == "1.8"){
-			var armor = [];
+		var armor = [];
 
-			armor.push(getHandRightItem());
-			armor.push(getShoesItem());
-			armor.push(getLeggingsItem());
-			armor.push(getChestplateItem());
-			armor.push(getHeadItem());
+		armor.push(getShoesItem());
+		armor.push(getLeggingsItem());
+		armor.push(getChestplateItem());
+		armor.push(getHeadItem());
 
-			tags.push("Equipment:["+armor.join(",")+"]");
-		}
-		// New 1.9+ Equipment format
-		else{
-			var armor = [];
+		tags.push("ArmorItems:["+armor.join(",")+"]");
 
-			armor.push(getShoesItem());
-			armor.push(getLeggingsItem());
-			armor.push(getChestplateItem());
-			armor.push(getHeadItem());
+		var hands = [];
 
-			tags.push("ArmorItems:["+armor.join(",")+"]");
+		hands.push(getHandRightItem());
+		hands.push(getHandLeftItem());
 
-			var hands = [];
+		tags.push("HandItems:["+hands.join(",")+"]");
 
-			hands.push(getHandRightItem());
-			hands.push(getHandLeftItem());
-
-			tags.push("HandItems:["+hands.join(",")+"]");
-		}
-
-		// Hide netherite armour for lower versions
-		switch (mcVersion) {
-			case "1.14":
-			case "1.13":
-				$("#list-helmet").empty().append(helmetList.filter("[value!=netherite_helmet]"));
-				$("#list-chestplate").empty().append(chestplateList.filter("[value!=netherite_chestplate]"));
-				$("#list-leggings").empty().append(leggingsList.filter("[value!=netherite_leggings]"));
-				$("#list-shoes").empty().append(bootsList.filter("[value!=netherite_boots]"));
-				break;
-			case "1.11":
-			case "1.9":
-			case "1.8":
-				$("#list-helmet").empty().append(helmetList.filter("[value!=netherite_helmet]").filter("[value!=turtle_helmet]"));
-				$("#list-chestplate").empty().append(chestplateList.filter("[value!=netherite_chestplate]").filter("[value!=turtle_chestplate]"));
-				$("#list-leggings").empty().append(leggingsList.filter("[value!=netherite_leggings]").filter("[value!=turtle_leggings]"));
-				$("#list-shoes").empty().append(bootsList.filter("[value!=netherite_boots]").filter("[value!=turtle_boots]"));
-				break;
-			default:
-				$("#list-helmet").empty().append(helmetList);
-				$("#list-chestplate").empty().append(chestplateList);
-				$("#list-leggings").empty().append(leggingsList);
-				$("#list-shoes").empty().append(bootsList);
-				break;
-		}
+		$("#list-helmet").empty().append(helmetList);
+		$("#list-chestplate").empty().append(chestplateList);
+		$("#list-leggings").empty().append(leggingsList);
+		$("#list-shoes").empty().append(bootsList);
 	}
 
 	// Custom name
 	if(customName) {
 		let name = [];
-		switch (mcVersion) {
-			case "1.8":
-			case "1.9":
-			case "1.11":
-				tags.push(`CustomName:"${customName}"`);
-				break;
-			case "1.13":
-				name.push(getName());
-				name.push(getNameColor());
-				name.push(getNameBold());
-				name.push(getNameItalic());
-				name.push(getNameObfuscated());
-				name.push(getNameStrikethrough());
-
-				tags.push(`CustomName:"{${name.join("")}}"`);
-				break;
-			default:
 				// CustomNames from 1.14+ can now use single quotes to contain json
 				// Replace escaped double quotes with single quotes to make it look pretty
-				name.push(getName().replaceAll("\\", ""));
-				name.push(getNameColor().replaceAll("\\", ""));
-				name.push(getNameBold().replaceAll("\\", ""));
-				name.push(getNameItalic().replaceAll("\\", ""));
-				name.push(getNameObfuscated().replaceAll("\\", ""));
-				name.push(getNameStrikethrough().replaceAll("\\", ""));
-				tags.push(`CustomName:'{${name.join("")}}'`);
-				break;
-		}
+		name.push(getName().replaceAll("\\", ""));
+		name.push(getNameColor().replaceAll("\\", ""));
+		name.push(getNameBold().replaceAll("\\", ""));
+		name.push(getNameItalic().replaceAll("\\", ""));
+		name.push(getNameObfuscated().replaceAll("\\", ""));
+		name.push(getNameStrikethrough().replaceAll("\\", ""));
+		tags.push(`CustomName:'{${name.join("")}}'`);
 	}
 
 	if(showCustomName)
@@ -691,12 +547,6 @@ function generateCode(){
 
 	code += tags.join(",");
 	code += "}";
-	if (give) {
-		code += "}";
-		if (mcVersion != "1.8" && mcVersion != "1.9" && mcVersion != "1.11") {
-			code += " 1"
-		}
-	}
 	return code;
 }
 
@@ -743,36 +593,18 @@ function getHeadItem(){
 
 	// Use input as player name
 	else if(equipCustomHeadMode == "player"){
-		if (mcVersion == "1.8" || mcVersion == "1.10" || mcVersion == "1.11") {
-			return "{id:\"skull\",Count:1b,Damage:3b,tag:{SkullOwner:\""+equipHelmet+"\"}}";
-		} else {
-			return "{id:\"player_head\",Count:1b,tag:{SkullOwner:\""+equipHelmet+"\"}}";
-		}
+		return "{id:\"player_head\",Count:1b,tag:{SkullOwner:\""+equipHelmet+"\"}}";
 	}
 
 	// Use input as url
 	// Best reference: http://redd.it/24quwx
 	else if(equipCustomHeadMode == "url"){
 		var base64Value = btoa('{"textures":{"SKIN":{"url":"'+equipHelmet+'"}}}');
-
-		switch (mcVersion) {
-			case "1.8":
-			case "1.9":
-			case "1.11":
-				return '{id:"skull",Count:1b,Damage:3b,tag:{SkullOwner:{Id:"'+generateUUID()+'",Properties:{textures:[{Value:"'+base64Value+'"}]}}}}';
-			case "1.13":
-			case "1.14":
-				return '{id:"minecraft:player_head",Count:1b,tag:{SkullOwner:{Id:"'+generateUUID()+'",Properties:{textures:[{Value:"'+base64Value+'"}]}}}}';
-			default:
-				return '{id:"minecraft:player_head",Count:1b,tag:{SkullOwner:{Id:'+generateIntArray()+',Properties:{textures:[{Value:"'+base64Value+'"}]}}}}';
-		}
+		return '{id:"minecraft:player_head",Count:1b,tag:{SkullOwner:{Id:'+generateIntArray()+',Properties:{textures:[{Value:"'+base64Value+'"}]}}}}';
 	}
 
-	// Parse give code
 	else if(equipCustomHeadMode == "givecode"){
 
-		// Give Code in this format: /give @p skull 1 3 {display:{Name:"Some Name"},SkullOwner:{Id:"a74719ce...
-		// Give code in 1.13 has changed to this format: /give @p player_head{display:{Name:"Some Name"},SkullOwner:{Id:"a74719ce...
 		if(equipHelmet.indexOf("SkullOwner:{") >= 0){
 			var skullOwnerRaw = equipHelmet.substring(equipHelmet.indexOf("SkullOwner"));
 			var parsed = "";
@@ -789,23 +621,12 @@ function getHeadItem(){
 				if(bracketCounter == 0 && bracketsStarted) break;
 				if(c == ":") bracketsStarted = true;
 			}
-
-			if (mcVersion == "1.8" || mcVersion == "1.10" || mcVersion == "1.11") {
-				return '{id:"skull",Count:1b,Damage:3b,tag:{'+parsed+'}}';
-			} else {
-				return '{id:"player_head",Count:1b,tag:{'+parsed+'}}';
-			}
+			return '{id:"player_head",Count:1b,tag:{'+parsed+'}}';
 		}
-		// Give Code in this format: /give @p skull 1 3 {SkullOwner:"playername"} (quotes optional)
-		// Give code in 1.13 has changed to this format: /give @p player_head{display:{Name:"Some Name"},SkullOwner:{Id"a74719ce...
 		else{
 			var skullOwnerRaw = equipHelmet.substring(equipHelmet.indexOf("SkullOwner:"));
 			skullOwnerRaw = skullOwnerRaw.substring(0, skullOwnerRaw.indexOf("}"));
-			if (mcVersion == "1.8" || mcVersion == "1.10" || mcVersion == "1.11") {
-				return '{id:"skull",Count:1b,Damage:3b,tag:{'+skullOwnerRaw+'}}';
-			} else {
-				return '{id:"player_head",Count:1b,tag:{'+skullOwnerRaw+'}}';
-			}
+			return '{id:"player_head",Count:1b,tag:{'+skullOwnerRaw+'}}';
 		}
 
 	}
@@ -843,32 +664,32 @@ function getNameObfuscated() {
 }
 
 function calculateDisabledSlotsFlag() {
-    var dO = $("#dO").is(":checked") ? 1 << (5) : 0;
-    var dH = $("#dH").is(":checked") ? 1 << (4) : 0;
-    var dC = $("#dC").is(":checked") ? 1 << (3) : 0;
-    var dL = $("#dL").is(":checked") ? 1 << (2) : 0;
-    var dB = $("#dB").is(":checked") ? 1 << (1) : 0;
-    var dW = $("#dW").is(":checked") ? 1 << (0) : 0;
-    var dR = dO + dH + dC + dL + dB + dW;
+	var dO = $("#dO").is(":checked") ? 1 << (5) : 0;
+	var dH = $("#dH").is(":checked") ? 1 << (4) : 0;
+	var dC = $("#dC").is(":checked") ? 1 << (3) : 0;
+	var dL = $("#dL").is(":checked") ? 1 << (2) : 0;
+	var dB = $("#dB").is(":checked") ? 1 << (1) : 0;
+	var dW = $("#dW").is(":checked") ? 1 << (0) : 0;
+	var dR = dO + dH + dC + dL + dB + dW;
 
-    var rO = $("#rO").is(":checked") ? 1 << (5 + 8) : 0;
-    var rH = $("#rH").is(":checked") ? 1 << (4 + 8) : 0;
-    var rC = $("#rC").is(":checked") ? 1 << (3 + 8) : 0;
-    var rL = $("#rL").is(":checked") ? 1 << (2 + 8) : 0;
-    var rB = $("#rB").is(":checked") ? 1 << (1 + 8) : 0;
-    var rW = $("#rW").is(":checked") ? 1 << (0 + 8) : 0;
-    var rR = rO + rH + rC + rL + rB + rW;
+	var rO = $("#rO").is(":checked") ? 1 << (5 + 8) : 0;
+	var rH = $("#rH").is(":checked") ? 1 << (4 + 8) : 0;
+	var rC = $("#rC").is(":checked") ? 1 << (3 + 8) : 0;
+	var rL = $("#rL").is(":checked") ? 1 << (2 + 8) : 0;
+	var rB = $("#rB").is(":checked") ? 1 << (1 + 8) : 0;
+	var rW = $("#rW").is(":checked") ? 1 << (0 + 8) : 0;
+	var rR = rO + rH + rC + rL + rB + rW;
 
-    var pO = $("#pO").is(":checked") ? 1 << (5 + 16) : 0;
-    var pH = $("#pH").is(":checked") ? 1 << (4 + 16) : 0;
-    var pC = $("#pC").is(":checked") ? 1 << (3 + 16) : 0;
-    var pL = $("#pL").is(":checked") ? 1 << (2 + 16) : 0;
-    var pB = $("#pB").is(":checked") ? 1 << (1 + 16) : 0;
-    var pW = $("#pW").is(":checked") ? 1 << (0 + 16) : 0;
-    var pR = pO + pH + pC + pL + pB + pW;
+	var pO = $("#pO").is(":checked") ? 1 << (5 + 16) : 0;
+	var pH = $("#pH").is(":checked") ? 1 << (4 + 16) : 0;
+	var pC = $("#pC").is(":checked") ? 1 << (3 + 16) : 0;
+	var pL = $("#pL").is(":checked") ? 1 << (2 + 16) : 0;
+	var pB = $("#pB").is(":checked") ? 1 << (1 + 16) : 0;
+	var pW = $("#pW").is(":checked") ? 1 << (0 + 16) : 0;
+	var pR = pO + pH + pC + pL + pB + pW;
 
-    var result = dR + rR + pR;
-    return result;
+	var result = dR + rR + pR;
+	return result;
 }
 
 function isZero(vector){
@@ -904,20 +725,17 @@ function render(){
 	requestAnimationFrame(render);
 }
 
-
-
-
 // ---- Additional functions
 
 // From here: http://stackoverflow.com/a/8809472/1456971
 function generateUUID(){
-    var d = new Date().getTime();
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
-    });
-    return uuid;
+	var d = new Date().getTime();
+	var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		var r = (d + Math.random()*16)%16 | 0;
+		d = Math.floor(d/16);
+		return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+	});
+	return uuid;
 }
 
 function generateIntArray() {
@@ -938,32 +756,32 @@ function generateIntArray() {
 }
 
 function getDecimalRGB(rgb){
-    //The string has the format 'rgb(r, g, b)'
+	//The string has the format 'rgb(r, g, b)'
 
-    //Remove whitespaces. Now formatted: 'rgb(r,g,b)'
-    rgb = rgb.replace(/ /g,"");
+	//Remove whitespaces. Now formatted: 'rgb(r,g,b)'
+	rgb = rgb.replace(/ /g,"");
 
-    var r = rgb.substring(4,rgb.indexOf(","));
-    var g = rgb.substring(rgb.indexOf(",")+1,rgb.lastIndexOf(","));
-    var b = rgb.substring(rgb.lastIndexOf(",")+1, rgb.length-1);
+	var r = rgb.substring(4,rgb.indexOf(","));
+	var g = rgb.substring(rgb.indexOf(",")+1,rgb.lastIndexOf(","));
+	var b = rgb.substring(rgb.lastIndexOf(",")+1, rgb.length-1);
 
 
-    return (r << 16) | (g << 8) | b;
+	return (r << 16) | (g << 8) | b;
 }
 
 function isLeatherArmor(item){
-    if(item == null)
-        return false;
-    return item.indexOf("leather") == 0;
+	if(item == null)
+		return false;
+	return item.indexOf("leather") == 0;
 }
 
 // Pass the colorpicker element as element. If condition is true, it will return a proper datatag for use in items, otherwise it will return an empty string.
 function getLeatherColorString(element, condition){
-    if(condition){
-        var rgb = getDecimalRGB(element.css("background-color"));
-        return ",tag:{display:{color:"+rgb+"}}";
-    }
-    return "";
+	if(condition){
+		var rgb = getDecimalRGB(element.css("background-color"));
+		return ",tag:{display:{color:"+rgb+"}}";
+	}
+	return "";
 }
 
 // Rotate three.js mesh to fit the minecraft rotation
@@ -977,125 +795,29 @@ function setRotation(mesh, rotation){
 var rotWorldMatrix;
 // Rotate an object around an arbitrary axis in world space
 function rotateAroundWorldAxis(object, axis, radians, reset) {
-    rotWorldMatrix = new THREE.Matrix4();
-    rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
+	rotWorldMatrix = new THREE.Matrix4();
+	rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
 		if(!reset)
-    	rotWorldMatrix.multiply(object.matrix);        // pre-multiply
-    object.matrix = rotWorldMatrix;
-    object.rotation.setFromRotationMatrix(object.matrix);
+		rotWorldMatrix.multiply(object.matrix);		// pre-multiply
+	object.matrix = rotWorldMatrix;
+	object.rotation.setFromRotationMatrix(object.matrix);
 }
 
-function saveData() {
-	// Handles saving of armor stand data
-	const SAVE_DATA = {
-		name: $(`#creationname`).val() === `` ? `My Armor Stand #${localStorage.length + 1}` : $(`#creationname`).val(),
-		version: $(`#mcversion`).val(),
+function getParameterByName(name, url = window.location.href) {
+	name = name.replace(/[\[\]]/g, '\\$&');
+	var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
 
-		options: {
-			invisible: getCheckBoxInput("invisible"),
-			invulnerable: getCheckBoxInput("invulnerable"),
-			presistence_required: getCheckBoxInput("persistencerequired"),
-			no_base_plate: getCheckBoxInput("nobaseplate"),
-			no_gravity: getCheckBoxInput("nogravity"),
-			show_arms: getCheckBoxInput("showarms"),
-			small: getCheckBoxInput("small"),
-			marker: getCheckBoxInput("marker"),
-			center_corrected: getCheckBoxInput("center-corrected")
-		},
-
-		rotation: {
-			main: getRangeInput("rotation"),
-			head: [getRangeInput("headX"), getRangeInput("headY"), getRangeInput("headZ")],
-			body: [getRangeInput("bodyX"), getRangeInput("bodyY"), getRangeInput("bodyZ")],
-			legs: {
-				left: [getRangeInput("leftLegX"), getRangeInput("leftLegY"), getRangeInput("leftLegZ")],
-				right: [getRangeInput("rightLegX"), getRangeInput("rightLegY"), getRangeInput("rightLegZ")],
-			},
-			arms: {
-				left: [getRangeInput("leftArmX"), getRangeInput("leftArmY"), getRangeInput("leftArmZ")],
-				right: [getRangeInput("rightArmX"), getRangeInput("rightArmY"), getRangeInput("rightArmZ")]
-			}
-		},
-
-		equipment: {
-			enabled: getCheckBoxInput("useequipment"),
-			hands: {
-				right: getInput("equipHandRight"),
-				left: getInput("equipHandLeft")
-			},
-			boots: getInput("equipShoes"),
-			leggings: getInput("equipLeggings"),
-			chestplate: getInput("equipChestplate"),
-			helmet: getInput("equipHelmet"),
-			helmet_specifies: $("#equipCustomHeadMode").val(),
-
-			leather_colours: {
-				helmet: $(`#helmetcolor`).css(`background-color`),
-				chestplate: $(`#chestplatecolor`).css(`background-color`),
-				leggings: $(`#leggingscolor`).css(`background-color`),
-				boots: $(`#shoecolor`).css(`background-color`)
-			}
-		},
-
-		custom_name: {
-			name: $(`#customname`).val(),
-			show_custom_name: getCheckBoxInput("showcustomname"),
-			name_color: getInput("namecolor"),
-			options: {
-				bold: getCheckBoxInput("namebold"),
-				italic: getCheckBoxInput("nameitalic"),
-				obfuscated: getCheckBoxInput("nameobfuscated"),
-				strikethrough: getCheckBoxInput("namestrikethrough")
-			}
-		},
-
-		lock_slot_interaction: {
-			enabled: $("input[name=usedisabledslots]").is(":checked"),
-			remove: {
-				helmet: $("#dH").is(":checked"),
-				chestplate: $("#dC").is(":checked"),
-				leggings: $("#dL").is(":checked"),
-				boots: $("#dB").is(":checked"),
-				weapons: $("#dW").is(":checked"),
-				offhand: $("#dO").is(":checked")
-			},
-			replace: {
-				helmet: $("#rH").is(":checked"),
-				chestplate: $("#rC").is(":checked"),
-				leggings: $("#rL").is(":checked"),
-				boots: $("#rB").is(":checked"),
-				weapons: $("#rW").is(":checked"),
-				offhand: $("#rO").is(":checked")
-			},
-			place: {
-				helmet: $("#pH").is(":checked"),
-				chestplate: $("#pC").is(":checked"),
-				leggings: $("#pL").is(":checked"),
-				boots: $("#pB").is(":checked"),
-				weapons: $("#pW").is(":checked"),
-				offhand: $("#pO").is(":checked")
-			}
-		}
-	};
-
-	localStorage.setItem(SAVE_DATA.name, JSON.stringify(SAVE_DATA));
-	loadScreen();
-	$(`#creationname`).val(``);
-	alert(`Awesome! Your creation has been saved as ${SAVE_DATA.name}.`);
-};
-
-function loadData(data) {
-	//console.log(`loading data!`);
-	data = localStorage.getItem(data);
-	if (!data) return alert(`An error occurred while loading the creation.`);
-
+function loadData() {
+	var data = getParameterByName("armorstandSaveData")
+	if (!data) return console.log("No ArmorStand data found. Starting from base.");
+	
 	try {
 		data = JSON.parse(data);
-
-		// version
-		$(`#mcversion`).val(data.version);
-
-		// options
 		$("input[name=invisible]").prop(`checked`, data.options.invisible);
 		$("input[name=invulnerable]").prop(`checked`, data.options.invulnerable);
 		$("input[name=persistencerequired]").prop(`checked`, data.options.presistence_required);
@@ -1105,34 +827,32 @@ function loadData(data) {
 		$("input[name=small]").prop(`checked`, data.options.small);
 		$("input[name=marker]").prop(`checked`, data.options.marker);
 		$("input[name=center-corrected]").prop(`checked`, data.options.center_corrected);
-
-		// rotation
+		
 		$("input[name=rotation]").val(data.rotation.main);
 		$("input[name=headX]").val(data.rotation.head[0]);
 		$("input[name=headY]").val(data.rotation.head[1]);
 		$("input[name=headZ]").val(data.rotation.head[2]);
-
+		
 		$("input[name=bodyX]").val(data.rotation.body[0]);
 		$("input[name=bodyY]").val(data.rotation.body[1]);
 		$("input[name=bodyZ]").val(data.rotation.body[2]);
-
+		
 		$("input[name=leftLegX]").val(data.rotation.legs.left[0]);
 		$("input[name=leftLegY]").val(data.rotation.legs.left[1]);
 		$("input[name=leftLegZ]").val(data.rotation.legs.left[2]);
-
+		
 		$("input[name=rightLegX]").val(data.rotation.legs.right[0]);
 		$("input[name=rightLegY]").val(data.rotation.legs.right[1]);
 		$("input[name=rightLegZ]").val(data.rotation.legs.right[2]);
-
+		
 		$("input[name=leftArmX]").val(data.rotation.arms.left[0]);
 		$("input[name=leftArmY]").val(data.rotation.arms.left[1]);
 		$("input[name=leftArmZ]").val(data.rotation.arms.left[2]);
-
+		
 		$("input[name=rightArmX]").val(data.rotation.arms.right[0]);
 		$("input[name=rightArmY]").val(data.rotation.arms.right[1]);
 		$("input[name=rightArmZ]").val(data.rotation.arms.right[2]);
-
-		//equipment
+		
 		$("input[name=useequipment]").prop(`checked`, data.equipment.enabled);
 		$(`input[name=equipShoes]`).val(data.equipment.boots);
 		$(`input[name=equipLeggings]`).val(data.equipment.leggings);
@@ -1141,18 +861,17 @@ function loadData(data) {
 		$(`input[name=equipHandRight]`).val(data.equipment.hands.right);
 		$(`input[name=equipHandLeft]`).val(data.equipment.hands.left);
 		$(`#equipCustomHeadMode`).val(data.equipment.helmet_specifies);
-
+		
 		$(`#helmetcolor`).css(`background-color`, data.equipment.leather_colours.helmet);
 		$(`#chestplatecolor`).css(`background-color`, data.equipment.leather_colours.chestplate);
 		$(`#leggingscolor`).css(`background-color`, data.equipment.leather_colours.leggings);
 		$(`#shoecolor`).css(`background-color`, data.equipment.leather_colours.boots);
-
+		
 		getLeatherColorString($("#helmetcolor"))
 		getLeatherColorString($("#chestplatecolor"))
 		getLeatherColorString($("#leggingscolor"))
 		getLeatherColorString($("#shoecolor"))
-
-		//custom name
+		
 		$(`#customname`).val(data.custom_name.name);
 		$(`input[name=showcustomname]`).prop(`checked`, data.custom_name.show_custom_name);
 		$(`input[name=namecolor]`).val(data.custom_name.name_color);
@@ -1160,10 +879,9 @@ function loadData(data) {
 		$("input[name=nameitalic]").prop(`checked`, data.custom_name.options.italic);
 		$("input[name=nameobfuscated]").prop(`checked`, data.custom_name.options.obfuscated);
 		$("input[name=namestrikethrough]").prop(`checked`, data.custom_name.options.strikethrough);
-
-		//lock slot interaction
+		
 		$("input[name=usedisabledslots]").prop(`checked`, data.lock_slot_interaction.enabled);
-
+		
 		$(`#dO`).prop(`checked`, data.lock_slot_interaction.remove.offhand);
 		$(`#dH`).prop(`checked`, data.lock_slot_interaction.remove.helmet);
 		$(`#dC`).prop(`checked`, data.lock_slot_interaction.remove.chestplate);
@@ -1184,19 +902,9 @@ function loadData(data) {
 		$(`#pL`).prop(`checked`, data.lock_slot_interaction.place.leggings);
 		$(`#pB`).prop(`checked`, data.lock_slot_interaction.place.boots);
 		$(`#pW`).prop(`checked`, data.lock_slot_interaction.place.weapons);
-
 		handleInput();
-		//console.log(`done loading!`)
 	} catch (err) {
 		console.error(err);
-		alert(`An error occurred while loading the creation.`);
+		alert(`An error occurred while loading the ArmorStand.`);
 	};
-
-	//loadScreen();
-};
-
-function deleteSave(data) {
-	localStorage.removeItem(data);
-	loadScreen();
-	alert(`${data} has been deleted!`);
 };
