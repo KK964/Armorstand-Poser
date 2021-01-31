@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class ArmorStandWeb implements Runnable {
+    NBTHandler nbtHandler = new NBTHandler();
     ServerSocket serverSocket;
     private HashMap<String, Entity> armorStands = new HashMap<>();
 
@@ -60,20 +61,34 @@ public class ArmorStandWeb implements Runnable {
                     String path = url.getPath();
                     String query = url.getQuery();
                     String armorStandNbt2 = null;
+                    String inputJson = null;
                     if(query != null)
                         for(String q : query.split("&")) {
                             if(q.startsWith("armorStandNbt="))
                                 armorStandNbt2 = URLDecoder.decode(q.substring("armorStandNbt=".length()), "UTF-8");
+                            if(q.startsWith("armorstandSaveData="))
+                                inputJson = URLDecoder.decode(q.substring("armorstandSaveData=".length()), "UTF-8");
                         }
                     String armorStandNbt = armorStandNbt2;
                     if(armorStands.containsKey(path)) {
+                        Entity ar = armorStands.get(path);
+
                         String content = "An error occurred";
 
                         if(armorStandNbt == null) {
+                            if(inputJson == null) {
+
+                            }
                             InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/index.htm");
-                            byte[] c = new byte[8192];
+                            byte[] c = new byte[16000];
                             int l = in.read(c);
                             content = new String(c, 0, l, StandardCharsets.UTF_8);
+                            content = content.replaceAll("\\{WORLD\\}", ar.getWorld().getName())
+                                    .replaceAll("\\{X\\}", String.valueOf(ar.getLocation().getX()))
+                                    .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
+                                    .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
+                        } else {
+                            nbtHandler.setNBT(ar, armorStandNbt);
                         }
                         out.write("HTTP/1.1 200 OK\r\n".getBytes());
                         out.write("Content-Type: text/html; charset=UTF-8\r\n".getBytes());
@@ -86,12 +101,12 @@ public class ArmorStandWeb implements Runnable {
                     } else {
                         System.out.println(path);
                         String content = "404 Not Found";
-                        if(path == "/style.css" || path == "/js/colorpick.js" || path == "/js/colorpick.css" || path == "/js/main.js") {
+                        if(path.equals("/style.css") || path.equals("/js/colorpick.js") || path.equals("/js/colorpick.css") || path.equals("/js/main.js")) {
                             String contentType = "text/html";
                             switch (path) {
                                 case "/style.css": {
                                     InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/style.css");
-                                    byte[] c = new byte[8192];
+                                    byte[] c = new byte[4500];
                                     int l = in.read(c);
                                     contentType = "text/css";
                                     content = new String(c, 0, l, StandardCharsets.UTF_8);
@@ -99,7 +114,7 @@ public class ArmorStandWeb implements Runnable {
                                 }
                                 case "/js/colorpick.js": {
                                     InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/colorpick.js");
-                                    byte[] c = new byte[8192];
+                                    byte[] c = new byte[25000];
                                     int l = in.read(c);
                                     contentType = "text/javascript";
                                     content = new String(c, 0, l, StandardCharsets.UTF_8);
@@ -107,7 +122,7 @@ public class ArmorStandWeb implements Runnable {
                                 }
                                 case "/js/colorpick.css": {
                                     InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/colorpick.css");
-                                    byte[] c = new byte[8192];
+                                    byte[] c = new byte[10000];
                                     int l = in.read(c);
                                     contentType = "text/css";
                                     content = new String(c, 0, l, StandardCharsets.UTF_8);
@@ -115,7 +130,7 @@ public class ArmorStandWeb implements Runnable {
                                 }
                                 case "/js/main.js": {
                                     InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/main.js");
-                                    byte[] c = new byte[8192];
+                                    byte[] c = new byte[55000];
                                     int l = in.read(c);
                                     contentType = "text/javascript";
                                     content = new String(c, 0, l, StandardCharsets.UTF_8);
