@@ -47,7 +47,8 @@ public class ArmorStandCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.GREEN + "Giving " + total + "Armor Stands around you glowing for 10s.");
                 }
                 case "nbt": {
-
+                    player.sendMessage("nbt:");
+                    player.sendMessage(nbtHandler.getNBT(armorStand));
                 }
             }
         } else {
