@@ -4,3 +4,21 @@ description: ${project.description}
 main: net.justminecraft.armorstands.poser.ArmorStandPoserPlugin
 author: KK964
 depend: [JustPlots]
+commands:
+  armorstand:
+    description: Get an armorstands data.
+    aliases: []
+    permission: getarmorstand
+  setarmorstand:
+    description: Set an armorstands data.
+    aliases: [sas]
+    permission: setarmorstand
+  editarmorstand:
+    description: Edit an armorstands data.
+    aliases: [eas]
+    permission: setarmorstand
+permissions:
+  setarmorstand:
+    default: op
+  getarmorstand:
+    default: op
