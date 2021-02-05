@@ -103,11 +103,6 @@ $(document).ready(function(){
 	render();
 	loadScreen();
 
-	// Confirm exit
-	window.onbeforeunload = function(){
-		return "Unsaved changes will NOT be saved. Exit anyways?";
-	};
-
 	//Stuff to handle and update input
 	$("input").on("input", function(){
 		handleInput();
@@ -117,7 +112,19 @@ $(document).ready(function(){
 	});
 
 	//updateURL
-
+	$("#save")
+	.mousedown(function(event){
+	var url=window.location.href,
+    	separator = (url.indexOf("?")===-1)?"?":"&",
+    	newParam=separator + "armorStandNbt="+generateCode();
+    newUrl=url.replace(newParam,"");
+    newUrl+=newParam;
+	fetch(newUrl).then((response) => {response.text().then((text) => {alert(text)})});
+	});
+	$("#exit")
+	.mousedown(function(event){
+		close();
+	});
 
 	$("#gl")
 	.mousedown(function(event){
@@ -457,56 +464,63 @@ function generateCode(){
 	var tags = [];
 
 	//CheckBoxes
-	if(invisible)
-		tags.push("Invisible:1b");
+	if(invisible) 
+		tags.push("Invisible:1b") 
+	else 
+		tags.push("Invisible:0b");
 	if(invulnerable)
-		tags.push("Invulnerable:1b");
+		tags.push("Invulnerable:1b")
+	else
+		tags.push("Invulnerable:0b");
 	if(persistencerequired)
-		tags.push("PersistenceRequired:1b");
+		tags.push("PersistenceRequired:1b")
+	else
+		tags.push("PersistenceRequired:0b");
 	if(noBasePlate)
-		tags.push("NoBasePlate:1b");
+		tags.push("NoBasePlate:1b")
+	else
+		tags.push("NoBasePlate:0b");
 	if(noGravity)
-		tags.push("NoGravity:1b");
+		tags.push("NoGravity:1b")
+	else
+		tags.push("NoGravity:0b");
 	if(showArms)
-		tags.push("ShowArms:1b");
+		tags.push("ShowArms:1b")
+	else
+		tags.push("ShowArms:0b");
 	if(small)
-		tags.push("Small:1b");
+		tags.push("Small:1b")
+	else
+		tags.push("Small:0b");
 	if(marker)
-		tags.push("Marker:1b");
+		tags.push("Marker:1b")
+	else
+		tags.push("Marker:0b");
 
 	//Sliders
-	if(rotation != 0)
-		tags.push("Rotation:["+rotation+"f]");
+	tags.push("Rotation:["+rotation+"f]");
 
 	// Equipment
-	if(useEquipment){
-		var armor = [];
+	var armor = [];
 
-		armor.push(getShoesItem());
-		armor.push(getLeggingsItem());
-		armor.push(getChestplateItem());
-		armor.push(getHeadItem());
+	armor.push(getShoesItem() || "{}");
+	armor.push(getLeggingsItem() || "{}");
+	armor.push(getChestplateItem() || "{}");
+	armor.push(getHeadItem() || "{}");
+	tags.push("ArmorItems:["+armor.join(",")+"]");
+	var hands = [];
+	hands.push(getHandRightItem() || "{}");
+	hands.push(getHandLeftItem() || "{}");
+	tags.push("HandItems:["+hands.join(",")+"]");
 
-		tags.push("ArmorItems:["+armor.join(",")+"]");
-
-		var hands = [];
-
-		hands.push(getHandRightItem());
-		hands.push(getHandLeftItem());
-
-		tags.push("HandItems:["+hands.join(",")+"]");
-
-		$("#list-helmet").empty().append(helmetList);
-		$("#list-chestplate").empty().append(chestplateList);
-		$("#list-leggings").empty().append(leggingsList);
-		$("#list-shoes").empty().append(bootsList);
-	}
+	$("#list-helmet").empty().append(helmetList);
+	$("#list-chestplate").empty().append(chestplateList);
+	$("#list-leggings").empty().append(leggingsList);
+	$("#list-shoes").empty().append(bootsList);
 
 	// Custom name
 	if(customName) {
 		let name = [];
-				// CustomNames from 1.14+ can now use single quotes to contain json
-				// Replace escaped double quotes with single quotes to make it look pretty
 		name.push(getName().replaceAll("\\", ""));
 		name.push(getNameColor().replaceAll("\\", ""));
 		name.push(getNameBold().replaceAll("\\", ""));
@@ -514,36 +528,31 @@ function generateCode(){
 		name.push(getNameObfuscated().replaceAll("\\", ""));
 		name.push(getNameStrikethrough().replaceAll("\\", ""));
 		tags.push(`CustomName:'{${name.join("")}}'`);
-	}
+	} else
+	tags.push(`CustomName:'{"text":""}'`);
 
 	if(showCustomName)
-		tags.push("CustomNameVisible:1b");
+		tags.push("CustomNameVisible:1b")
+	else 
+		tags.push("CustomNameVisible:0b");
 
 	//DisabledSlots
-	if(useDisabledSlots){
-		tags.push("DisabledSlots:"+calculateDisabledSlotsFlag());
-	}
+	if(useDisabledSlots)
+		tags.push("DisabledSlots:"+calculateDisabledSlotsFlag())
+	else
+		tags.push("DisabledSlots:"+ "0");
 
 	//Now the pose
 	var pose = [];
-	if(!isZero(body))
-		pose.push("Body:"+getJSONArray(body));
-	if(!isZero(head))
-		pose.push("Head:"+getJSONArray(head));
-	if(!isZero(leftLeg))
-		pose.push("LeftLeg:"+getJSONArray(leftLeg));
-	if(!isZero(rightLeg))
-		pose.push("RightLeg:"+getJSONArray(rightLeg));
-	if(showArms){
-		if(!isZero(leftArm))
-			pose.push("LeftArm:"+getJSONArray(leftArm));
-		if(!isZero(rightArm))
-			pose.push("RightArm:"+getJSONArray(rightArm));
-	}
+	pose.push("Body:"+getJSONArray(body));
+	pose.push("Head:"+getJSONArray(head));
+	pose.push("LeftLeg:"+getJSONArray(leftLeg));
+	pose.push("RightLeg:"+getJSONArray(rightLeg));
 
+	pose.push("LeftArm:"+getJSONArray(leftArm));
+	pose.push("RightArm:"+getJSONArray(rightArm));
 
-	if(pose.length > 0)
-		tags.push("Pose:{"+pose.join(",")+"}");
+	tags.push("Pose:{"+pose.join(",")+"}");
 
 	code += tags.join(",");
 	code += "}";
