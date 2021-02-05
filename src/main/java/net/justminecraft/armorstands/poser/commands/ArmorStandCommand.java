@@ -45,10 +45,17 @@ public class ArmorStandCommand implements CommandExecutor {
                 case "show": {
                     int total = lookingAtArmorstand.highlightArmorStands(player);
                     player.sendMessage(ChatColor.GREEN + "Giving " + total + "Armor Stands around you glowing for 10s.");
+                    break;
                 }
                 case "nbt": {
-                    player.sendMessage("nbt:");
-                    player.sendMessage(nbtHandler.getNBT(armorStand));
+                    if(armorStand == null) {
+                        player.sendMessage(ChatColor.RED + "You are not looking at an armor stand.");
+                        return false;
+                    } else {
+                        player.sendMessage("nbt:");
+                        player.sendMessage(nbtHandler.getNBT(armorStand));
+                        break;
+                    }
                 }
             }
         } else {
