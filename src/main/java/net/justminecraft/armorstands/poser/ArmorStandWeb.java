@@ -40,7 +40,7 @@ public class ArmorStandWeb implements Runnable {
         if(armorStands.size() > 100)
             armorStands.clear();
         armorStands.put(s, e);
-        return "http://localhost:" + serverSocket.getLocalPort() + s;
+        return "http://arthangout.art:" + serverSocket.getLocalPort() + s;
     }
 
     class Handler extends Thread {
@@ -65,17 +65,19 @@ public class ArmorStandWeb implements Runnable {
                     String query = url.getQuery();
                     String armorStandNbt2 = null;
                     String inputJson = null;
-                    if(query != null)
-                        for(String q : query.split("&")) {
-                            if(q.startsWith("armorStandNbt="))
+                    if(query != null) {
+                        path = path.replace(query, "");
+                        for (String q : query.split("&")) {
+                            if (q.startsWith("armorStandNbt="))
                                 armorStandNbt2 = URLDecoder.decode(q.substring("armorStandNbt=".length()), "UTF-8");
-                            if(q.startsWith("armorstandSaveData="))
+                            if (q.startsWith("armorstandSaveData="))
                                 inputJson = URLDecoder.decode(q.substring("armorstandSaveData=".length()), "UTF-8");
                         }
+                    }
                     String armorStandNbt = armorStandNbt2;
                     if(armorStands.containsKey(path)) {
                         Entity ar = armorStands.get(path);
-
+                        System.out.println(nbtHandler.getNBTWebInput(ar));
                         String content = "An error occurred";
 
                         if(armorStandNbt == null) {
@@ -91,12 +93,24 @@ public class ArmorStandWeb implements Runnable {
                                     .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
                                     .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
                         } else {
-                            nbtHandler.setNBT(ar, armorStandNbt);
+                            if(ar.isValid()) {
+                                content = "Updated Armor Stand";
+                                String toSendNbt = nbtHandler.getWebFormattedNBT(ar, armorStandNbt);
+                                if(toSendNbt == null) {
+                                    content = "There was an error";
+                                } else {
+                                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                        nbtHandler.setNBT(ar, toSendNbt);
+                                    });
+                                }
+                            } else {
+                                content = "The Armor Stand May of been deleted.";
+                            }
                         }
                         out.write("HTTP/1.1 200 OK\r\n".getBytes());
                         out.write("Content-Type: text/html; charset=UTF-8\r\n".getBytes());
                         out.write(("Content-Length: " + content.length() + "\r\n").getBytes());
-                        out.write("Server: PlotMinigames\r\n".getBytes());
+                        out.write("Server: ArmorStandPoser\r\n".getBytes());
                         out.write("Connection: keep-alive\r\n".getBytes());
                         out.write("\r\n".getBytes());
                         out.write(content.getBytes(StandardCharsets.UTF_8));
@@ -144,7 +158,7 @@ public class ArmorStandWeb implements Runnable {
                             out.write("HTTP/1.1 200 OK\r\n".getBytes());
                             out.write(outWriteType.getBytes());
                             out.write(("Content-Length: " + content.length() + "\r\n").getBytes());
-                            out.write("Server: PlotMinigames\r\n".getBytes());
+                            out.write("Server: ArmorStandPoser\r\n".getBytes());
                             out.write("Connection: keep-alive\r\n".getBytes());
                             out.write("\r\n".getBytes());
                             out.write(content.getBytes(StandardCharsets.UTF_8));
@@ -154,7 +168,7 @@ public class ArmorStandWeb implements Runnable {
                             out.write("HTTP/1.1 404 NOT FOUND\r\n".getBytes());
                             out.write("Content-Type: text/html; charset=UTF-8\r\n".getBytes());
                             out.write(("Content-Length: " + content.length() + "\r\n").getBytes());
-                            out.write("Server: PlotMinigames\r\n".getBytes());
+                            out.write("Server: ArmorStandPoser\r\n".getBytes());
                             out.write("Connection: keep-alive\r\n".getBytes());
                             out.write("\r\n".getBytes());
                             out.write(content.getBytes(StandardCharsets.UTF_8));
