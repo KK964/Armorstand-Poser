@@ -27,7 +27,7 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
         WEB_FOLDER = getResource("web");
 
         try {
-            armorStandWeb = new ArmorStandWeb();
+            armorStandWeb = new ArmorStandWeb(this);
             Bukkit.getScheduler().runTaskAsynchronously(this, armorStandWeb);
         } catch (IOException e1) {
             e1.printStackTrace();

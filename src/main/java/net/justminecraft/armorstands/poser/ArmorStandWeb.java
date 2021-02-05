@@ -1,6 +1,7 @@
 package net.justminecraft.armorstands.poser;
 
 import org.bukkit.entity.Entity;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -15,9 +16,11 @@ public class ArmorStandWeb implements Runnable {
     NBTHandler nbtHandler = new NBTHandler();
     ServerSocket serverSocket;
     private HashMap<String, Entity> armorStands = new HashMap<>();
+    private final ArmorStandPoserPlugin plugin;
 
-    public ArmorStandWeb() throws IOException {
+    public ArmorStandWeb(ArmorStandPoserPlugin plugin) throws IOException {
         serverSocket = new ServerSocket(2058);
+        this.plugin = plugin;
     }
 
     public void run() {
