@@ -54,6 +54,7 @@ public class ArmorStandCommand implements CommandExecutor {
                     } else {
                         player.sendMessage("nbt:");
                         player.sendMessage(nbtHandler.getNBT(armorStand));
+                        System.out.println(nbtHandler.getNBTWebInput(armorStand));
                         break;
                     }
                 }
