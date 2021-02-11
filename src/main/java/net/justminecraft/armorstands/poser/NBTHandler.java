@@ -6,8 +6,10 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.v1_16_R3.MojangsonParser;
 import net.minecraft.server.v1_16_R3.NBTTagCompound;
+import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 
@@ -58,6 +60,9 @@ public class NBTHandler {
     }
 
     public JsonObject getNBTWebInput(Entity e) {
+
+        ArmorStandData armorStandData = new ArmorStandData((ArmorStand) e);
+
         ArrayList<String> validNBT = new ArrayList<>(Arrays.asList("Invisible",
                 "Invulnerable",
                 "PersistenceRequired",
@@ -83,28 +88,21 @@ public class NBTHandler {
         for(String s : keys) {
             if(validNBT.contains(s)) {
                 switch (s) {
+                    case "ArmorItems":
                     case "HandItems": {
-                        //"HandItems":"[{id:\"minecraft:pink_stained_glass\",Count:1b,tag:{display:{Name:'{\"text\":\"Support Pinky\"}'}}},{}]"
-                        String handItems = nbt.get(s).asString();
-                        handItems = handItems.substring(1);
-                        handItems = handItems.substring(0, handItems.length() -1);
-                        String[] items = handItems.split("(?<=(\\})),");
-                        for(String i : items) {
-                            i = i.substring(1);
-                            i = i.substring(0, i.length() -1);
-                            String[] iA = i.split("");
-                        }
+                        formattedNBT.add(s, itemArray(nbt.get(s).asString()));
+                        break;
                     }
                     case "Pose": {
                         //"Pose":"{RightArm:[0.0f,0.0f,0.0f],LeftLeg:[0.0f,0.0f,0.0f],LeftArm:[0.0f,0.0f,0.0f],RightLeg:[0.0f,0.0f,0.0f]}"
                         String pose = nbt.get(s).asString();
                         pose = pose.substring(1);
                         pose = pose.substring(0, pose.length() -1);
-                        String[] poseArray = pose.split("(?<=(\\])),");
+                        String[] poseArray = pose.split("(?<=(])),");
                         JsonObject poseObject = new JsonObject();
                         for(String p : poseArray) {
                             String[] pO = p.split(":");
-                            pO[1] = pO[1].replaceAll("(\\[|\\])", "");
+                            pO[1] = pO[1].replaceAll("(\\[|])", "");
                             String[] pOI = pO[1].split(",");
                             JsonArray pOIArray = new JsonArray();
                             for(String pI : pOI) {
@@ -118,7 +116,7 @@ public class NBTHandler {
                     case "Rotation": {
                         //"Rotation":"[73.0f,0.0f]"
                         String customRotation = nbt.get(s).asString();
-                        customRotation = customRotation.replaceAll("(\\[|\\])", "");
+                        customRotation = customRotation.replaceAll("(\\[|])", "");
                         String[] rotationAgs = customRotation.split(",");
                         JsonArray rotationArray = new JsonArray();
                         for(String rot : rotationAgs) {
@@ -136,8 +134,8 @@ public class NBTHandler {
                         String[] nameArgs = customName.split(",");
                         JsonObject nameObj = new JsonObject();
                         for(String n : nameArgs) {
-                            System.out.println(n);
                             String[] nm = n.split(":");
+                            if(nm.length < 2) break;
                             nameObj.addProperty(nm[0], nm[1]);
                         }
                         formattedNBT.add(s, nameObj);
@@ -149,25 +147,15 @@ public class NBTHandler {
                 }
             }
         }
-
         return formattedNBT;
     }
 
-    public String itemStackToNBT(ItemStack itemStack) {
-        net.minecraft.server.v1_16_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
-        Set<String> keys = new HashSet<>(nmsStack.getTag().getKeys());
-
-        return null;
-    }
-
-    public static String replaceLast(String string, String toReplace, String replacement) {
-        int pos = string.lastIndexOf(toReplace);
-        if (pos > -1) {
-            return string.substring(0, pos)
-                    + replacement
-                    + string.substring(pos + toReplace.length());
-        } else {
-            return string;
+    private JsonArray itemArray(String itemString) {
+        JsonArray array = new JsonArray();
+        String[] items = itemString.split("(?<=(})),(?=(\\{id:))");
+        for(String item : items) {
+            array.add(item);
         }
+        return array;
     }
 }

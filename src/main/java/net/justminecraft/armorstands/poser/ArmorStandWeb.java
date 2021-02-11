@@ -77,7 +77,6 @@ public class ArmorStandWeb implements Runnable {
                     String armorStandNbt = armorStandNbt2;
                     if(armorStands.containsKey(path)) {
                         Entity ar = armorStands.get(path);
-                        System.out.println(nbtHandler.getNBTWebInput(ar));
                         String content = "An error occurred";
 
                         if(armorStandNbt == null) {
