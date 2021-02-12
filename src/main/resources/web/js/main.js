@@ -684,8 +684,23 @@ function calculateDisabledSlotsFlag() {
 	return result;
 }
 
+// Thanks to "spongebob is the best anime#8085" for figuring this part out :D
 function reverseDisabled(data) {
 	data = parseInt(data);
+	var integer = [1,2,4,8,16,32,256,512,1024,2048,4096,8192,65536,131072,262144,524288,1048576,2097152];
+	integer.reverse();
+
+	var binaryValues = [];
+	var bin;
+	for (var i = integer.length; i >= 0; i--) {
+		if ((data-integer[i])>=0) {
+			total = data-integer[i];
+			bin = Math.pow(2,i);
+			if(integer.includes(bin))
+				binaryValues.push(bin);
+		}
+	}
+	return binaryValues;
 }
 
 function isZero(vector){
@@ -916,29 +931,52 @@ function loadData() {
 			}
 			if(data.hasOwnProperty("CustomNameVisible"))
 				$(`input[name=showcustomname]`).prop(`checked`, stringToBool(data.CustomNameVisible));
-			/*
-			$("input[name=usedisabledslots]").prop(`checked`, data.lock_slot_interaction.enabled);
-			
-			$(`#dO`).prop(`checked`, data.lock_slot_interaction.remove.offhand);
-			$(`#dH`).prop(`checked`, data.lock_slot_interaction.remove.helmet);
-			$(`#dC`).prop(`checked`, data.lock_slot_interaction.remove.chestplate);
-			$(`#dL`).prop(`checked`, data.lock_slot_interaction.remove.leggings);
-			$(`#dB`).prop(`checked`, data.lock_slot_interaction.remove.boots);
-			$(`#dW`).prop(`checked`, data.lock_slot_interaction.remove.weapons);
-	
-			$(`#rO`).prop(`checked`, data.lock_slot_interaction.replace.offhand);
-			$(`#rH`).prop(`checked`, data.lock_slot_interaction.replace.helmet);
-			$(`#rC`).prop(`checked`, data.lock_slot_interaction.replace.chestplate);
-			$(`#rL`).prop(`checked`, data.lock_slot_interaction.replace.leggings);
-			$(`#rB`).prop(`checked`, data.lock_slot_interaction.replace.boots);
-			$(`#rW`).prop(`checked`, data.lock_slot_interaction.replace.weapons);
-	
-			$(`#pO`).prop(`checked`, data.lock_slot_interaction.place.offhand);
-			$(`#pH`).prop(`checked`, data.lock_slot_interaction.place.helmet);
-			$(`#pC`).prop(`checked`, data.lock_slot_interaction.place.chestplate);
-			$(`#pL`).prop(`checked`, data.lock_slot_interaction.place.leggings);
-			$(`#pB`).prop(`checked`, data.lock_slot_interaction.place.boots);
-			$(`#pW`).prop(`checked`, data.lock_slot_interaction.place.weapons);*/
+
+			if(data.hasOwnProperty("DisabledSlots") && data.DisabledSlots != "0") {
+				$("input[name=usedisabledslots]").prop(`checked`, true);
+				var disabledSlots = reverseDisabled(data.DisabledSlots);
+				for(var i of disabledSlots) {
+					//remove 1,2,4,8,16,32
+					if(i==1)
+						$(`#dW`).prop(`checked`, true); //weapon
+					if(i==2)
+						$(`#dB`).prop(`checked`, true); //boots
+					if(i==4)
+						$(`#dL`).prop(`checked`, true); //leggings
+					if(i==8)
+						$(`#dC`).prop(`checked`, true); //chestplate
+					if(i==16)
+						$(`#dH`).prop(`checked`, true); //helmet
+					if(i==32)
+						$(`#dO`).prop(`checked`, true); //offhand
+					//replace 256,512,1024,2048,4096,8192
+					if(i==256)
+						$(`#rW`).prop(`checked`, true);
+					if(i==512)
+						$(`#rB`).prop(`checked`, true);
+					if(i==1024)
+						$(`#rL`).prop(`checked`, true);
+					if(i==2048)
+						$(`#rC`).prop(`checked`, true);
+					if(i==4096)
+						$(`#rH`).prop(`checked`, true);
+					if(i==8192)
+						$(`#rO`).prop(`checked`, true);
+					//place 65536,131072,262144,524288,1048576,2097152
+					if(i==65536)
+						$(`#pW`).prop(`checked`, true);
+					if(i==131072)
+						$(`#pB`).prop(`checked`, true);
+					if(i==262144)
+						$(`#pL`).prop(`checked`, true);
+					if(i==524288)
+						$(`#pC`).prop(`checked`, true);
+					if(i==1048576)
+						$(`#pH`).prop(`checked`, true);
+					if(i==2097152)
+						$(`#pO`).prop(`checked`, true);
+				}
+			}
 			handleInput();
 		} catch (err) {
 			console.error(err);

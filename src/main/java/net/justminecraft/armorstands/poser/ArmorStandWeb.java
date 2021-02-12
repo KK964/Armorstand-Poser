@@ -37,7 +37,6 @@ public class ArmorStandWeb implements Runnable {
 
     public String createHandler(Entity e) {
         String s = "/" + Long.toString(new Random().nextLong(), 16);
-        System.out.println(s);
         if(armorStands.size() > 100)
             armorStands.clear();
         armorStands.put(s, e);
@@ -131,7 +130,6 @@ public class ArmorStandWeb implements Runnable {
                             out.flush();
                         }
                     } else {
-                        System.out.println(path);
                         String content = "404 Not Found";
                         if(path.equals("/style.css") || path.equals("/js/colorpick.js") || path.equals("/js/colorpick.css") || path.equals("/js/main.js")) {
                             String contentType = "text/html";
