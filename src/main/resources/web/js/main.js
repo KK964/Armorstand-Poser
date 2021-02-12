@@ -15,12 +15,10 @@ var mcVersion = "1.16";
 
 var invisible = false;
 var invulnerable = false;
-var persistencerequired = false;
 var noBasePlate = false;
 var noGravity = false;
 var showArms = false;
 var small = false;
-var marker = false;
 
 var useEquipment;
 var equipHandRight;
@@ -34,10 +32,6 @@ var equipColorShoes;
 var equipColorLeggings;
 var equipColorChestplate;
 var equipColorHelmet;
-var helmetList;
-var chestplateList;
-var leggingsList;
-var bootsList;
 
 var customName;
 var showCustomName;
@@ -102,6 +96,7 @@ $(document).ready(function(){
 	updateUI();
 	render();
 	loadScreen();
+	loadData();
 
 	//Stuff to handle and update input
 	$("input").on("input", function(){
@@ -164,12 +159,6 @@ $(document).ready(function(){
 			handleInput();
 		}
 	});
-
-	helmetList = $("#list-helmet").find("option");
-	chestplateList = $("#list-chestplate").find("option");
-	leggingsList = $("#list-leggings").find("option");
-	bootsList = $("#list-shoes").find("option");
-
 });
 
 function loadScreen() {
@@ -320,12 +309,10 @@ function handleInput(){
 
 	invisible = getCheckBoxInput("invisible");
 	invulnerable = getCheckBoxInput("invulnerable");
-	persistencerequired = getCheckBoxInput("persistencerequired");
 	noBasePlate = getCheckBoxInput("nobaseplate");
 	noGravity = getCheckBoxInput("nogravity");
 	showArms = getCheckBoxInput("showarms");
 	small = getCheckBoxInput("small");
-	marker = getCheckBoxInput("marker");
 
 	useEquipment = getCheckBoxInput("useequipment");
 	equipHandRight = getInput("equipHandRight");
@@ -472,10 +459,6 @@ function generateCode(){
 		tags.push("Invulnerable:1b")
 	else
 		tags.push("Invulnerable:0b");
-	if(persistencerequired)
-		tags.push("PersistenceRequired:1b")
-	else
-		tags.push("PersistenceRequired:0b");
 	if(noBasePlate)
 		tags.push("NoBasePlate:1b")
 	else
@@ -492,10 +475,6 @@ function generateCode(){
 		tags.push("Small:1b")
 	else
 		tags.push("Small:0b");
-	if(marker)
-		tags.push("Marker:1b")
-	else
-		tags.push("Marker:0b");
 
 	//Sliders
 	tags.push("Rotation:["+rotation+"f]");
@@ -512,11 +491,6 @@ function generateCode(){
 	hands.push(getHandRightItem() || "{}");
 	hands.push(getHandLeftItem() || "{}");
 	tags.push("HandItems:["+hands.join(",")+"]");
-
-	$("#list-helmet").empty().append(helmetList);
-	$("#list-chestplate").empty().append(chestplateList);
-	$("#list-leggings").empty().append(leggingsList);
-	$("#list-shoes").empty().append(bootsList);
 
 	// Custom name
 	if(customName) {
@@ -561,33 +535,30 @@ function generateCode(){
 
 function getHandRightItem(){
 	if(equipHandRight == "") return "{}";
-	return "{id:\""+equipHandRight+"\",Count:1b}";
+	return "{id:\""+ getNbt(equipHandRight)+"}";
 }
 
 function getHandLeftItem(){
 	if(equipHandLeft == "") return "{}";
-	return "{id:\""+equipHandLeft+"\",Count:1b}";
+	return "{id:\""+getNbt(equipHandLeft)+"}";
 }
 
 function getShoesItem(){
 	if(equipShoes == "") return "{}";
-	return "{id:\""+equipShoes+"\",Count:1b"
-					+getLeatherColorString($("#shoecolor"), isLeatherArmor(equipShoes))
-					+"}";
+	return "{id:\""+getNbt(equipShoes)
+		+getLeatherColorString($("#shoecolor"), isLeatherArmor(equipShoes))+"}";
 }
 
 function getLeggingsItem(){
 	if(equipLeggings == "") return "{}";
-	return "{id:\""+equipLeggings+"\",Count:1b"
-					+getLeatherColorString($("#leggingscolor"), isLeatherArmor(equipLeggings))
-					+"}";
+	return "{id:\""+getNbt(equipLeggings)
+		+getLeatherColorString($("#leggingscolor"), isLeatherArmor(equipLeggings))+"}";
 }
 
 function getChestplateItem(){
 	if(equipChestplate == "") return "{}";
-	return "{id:\""+equipChestplate+"\",Count:1b"
-				+getLeatherColorString($("#chestplatecolor"), isLeatherArmor(equipChestplate))
-				+"}";
+	return "{id:\""+getNbt(equipChestplate)
+		+getLeatherColorString($("#chestplatecolor"), isLeatherArmor(equipChestplate))+"}";
 }
 
 function getHeadItem(){
@@ -595,7 +566,7 @@ function getHeadItem(){
 
 	// Use input as item
 	if(equipCustomHeadMode == "item"){
-		return "{id:\""+equipHelmet+"\",Count:1b"
+		return "{id:\""+getNbt(equipHelmet)+
 		+getLeatherColorString($("#helmetcolor"), isLeatherArmor(equipHelmet))
 		+"}";
 	}
@@ -637,9 +608,16 @@ function getHeadItem(){
 			skullOwnerRaw = skullOwnerRaw.substring(0, skullOwnerRaw.indexOf("}"));
 			return '{id:"player_head",Count:1b,tag:{'+skullOwnerRaw+'}}';
 		}
-
 	}
+}
 
+function getNbt(inputString) {
+	if(!inputString) return "\"";
+	if(!inputString.includes("{")) return inputString+"\",Count:1b";
+	var [first, ...rest] = inputString.split(/{(?=(.+))/);
+	var nbt = first+"\",Count:1b,"+"tag:{"+rest[0].slice(0,-1)+"}";
+	console.log(nbt);
+	return nbt;
 }
 
 function getName() {
@@ -821,99 +799,122 @@ function getParameterByName(name, url = window.location.href) {
 	return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
+function setToInt(data) {
+	return parseInt(data.slice(0, 3));
+}
+
 function loadData() {
-	var data = getParameterByName("armorstandSaveData")
-	if (!data) return console.log("No ArmorStand data found. Starting from base.");
+	var url=window.location.href,
+	separator = (url.indexOf("?")===-1)?"?":"&",
+	newParam=separator + "requestData=true";
+	newUrl=url.replace(newParam,"");
+	newUrl+=newParam;
+	fetch(newUrl).then((response) => {response.json().then((data) => {
+		try {
+			if(data.hasOwnProperty("Invisible") && data.Invisible=="1b")
+				$("input[name=invisible]").prop(`checked`, true);
+			if(data.hasOwnProperty("Invulnerable") && data.Invulnerable=="1b")
+				$("input[name=invulnerable]").prop(`checked`, true);
+			if(data.hasOwnProperty("NoBasePlate") && data.NoBasePlate=="1b")
+				$("input[name=nobaseplate]").prop(`checked`, true);
+			if(data.hasOwnProperty("NoGravity") && data.NoGravity=="1b")
+				$("input[name=nogravity]").prop(`checked`, true);
+			if(data.hasOwnProperty("ShowArms") && data.ShowArms=="1b")
+				$("input[name=showarms]").prop(`checked`, true);
+			if(data.hasOwnProperty("Small") && data.Small=="1b")
+				$("input[name=small]").prop(`checked`, true);
+			
+			if(data.hasOwnProperty("Rotation"))
+				$("input[name=rotation]").val(setToInt(data.Rotation[0]));
+			
+			if(data.hasOwnProperty("Pose")) {
+				if(data.Pose.hasOwnProperty("Head")) {
+					$("input[name=headX]").val(setToInt(data.Pose.Head[0]));
+					$("input[name=headY]").val(setToInt(data.Pose.Head[1]));
+					$("input[name=headZ]").val(setToInt(data.Pose.Head[2]));
+				}
+				if(data.Pose.hasOwnProperty("Body")) {
+					$("input[name=bodyX]").val(setToInt(data.Pose.Body[0]));
+					$("input[name=bodyY]").val(setToInt(data.Pose.Body[1]));
+					$("input[name=bodyZ]").val(setToInt(data.Pose.Body[2]));
+				}
+				if(data.Pose.hasOwnProperty("LeftLeg")) {
+					$("input[name=leftLegX]").val(setToInt(data.Pose.LeftLeg[0]));
+					$("input[name=leftLegY]").val(setToInt(data.Pose.LeftLeg[1]));
+					$("input[name=leftLegZ]").val(setToInt(data.Pose.LeftLeg[2]));	
+				}
+				if(data.Pose.hasOwnProperty("RightLeg")) {
+					$("input[name=rightLegX]").val(setToInt(data.Pose.RightLeg[0]));
+					$("input[name=rightLegY]").val(setToInt(data.Pose.RightLeg[1]));
+					$("input[name=rightLegZ]").val(setToInt(data.Pose.RightLeg[2]));
+				}
+				if(data.Pose.hasOwnProperty("LeftArm")) {
+					$("input[name=leftArmX]").val(setToInt(data.Pose.LeftArm[0]));
+					$("input[name=leftArmY]").val(setToInt(data.Pose.LeftArm[1]));
+					$("input[name=leftArmZ]").val(setToInt(data.Pose.LeftArm[2]));
+				}
+				if(data.Pose.hasOwnProperty("RightArm")) {
+					$("input[name=rightArmX]").val(setToInt(data.Pose.RightArm[0]));
+					$("input[name=rightArmY]").val(setToInt(data.Pose.RightArm[1]));
+					$("input[name=rightArmZ]").val(setToInt(data.Pose.RightArm[2]));
+				}
+			}
+
+			/*
+			
+			$("input[name=useequipment]").prop(`checked`, data.equipment.enabled);
+			$(`input[name=equipShoes]`).val(data.equipment.boots);
+			$(`input[name=equipLeggings]`).val(data.equipment.leggings);
+			$(`input[name=equipChestplate]`).val(data.equipment.chestplate);
+			$(`input[name=equipHelmet]`).val(data.equipment.helmet);
+			$(`input[name=equipHandRight]`).val(data.equipment.hands.right);
+			$(`input[name=equipHandLeft]`).val(data.equipment.hands.left);
+			$(`#equipCustomHeadMode`).val(data.equipment.helmet_specifies);
+			
+			$(`#helmetcolor`).css(`background-color`, data.equipment.leather_colours.helmet);
+			$(`#chestplatecolor`).css(`background-color`, data.equipment.leather_colours.chestplate);
+			$(`#leggingscolor`).css(`background-color`, data.equipment.leather_colours.leggings);
+			$(`#shoecolor`).css(`background-color`, data.equipment.leather_colours.boots);
+			
+			getLeatherColorString($("#helmetcolor"))
+			getLeatherColorString($("#chestplatecolor"))
+			getLeatherColorString($("#leggingscolor"))
+			getLeatherColorString($("#shoecolor"))
+			
+			$(`#customname`).val(data.custom_name.name);
+			$(`input[name=showcustomname]`).prop(`checked`, data.custom_name.show_custom_name);
+			$(`input[name=namecolor]`).val(data.custom_name.name_color);
+			$("input[name=namebold]").prop(`checked`, data.custom_name.options.bold);
+			$("input[name=nameitalic]").prop(`checked`, data.custom_name.options.italic);
+			$("input[name=nameobfuscated]").prop(`checked`, data.custom_name.options.obfuscated);
+			$("input[name=namestrikethrough]").prop(`checked`, data.custom_name.options.strikethrough);
+			
+			$("input[name=usedisabledslots]").prop(`checked`, data.lock_slot_interaction.enabled);
+			
+			$(`#dO`).prop(`checked`, data.lock_slot_interaction.remove.offhand);
+			$(`#dH`).prop(`checked`, data.lock_slot_interaction.remove.helmet);
+			$(`#dC`).prop(`checked`, data.lock_slot_interaction.remove.chestplate);
+			$(`#dL`).prop(`checked`, data.lock_slot_interaction.remove.leggings);
+			$(`#dB`).prop(`checked`, data.lock_slot_interaction.remove.boots);
+			$(`#dW`).prop(`checked`, data.lock_slot_interaction.remove.weapons);
 	
-	try {
-		data = JSON.parse(data);
-		$("input[name=invisible]").prop(`checked`, data.options.invisible);
-		$("input[name=invulnerable]").prop(`checked`, data.options.invulnerable);
-		$("input[name=persistencerequired]").prop(`checked`, data.options.presistence_required);
-		$("input[name=nobaseplate]").prop(`checked`, data.options.no_base_plate);
-		$("input[name=nogravity]").prop(`checked`, data.options.no_gravity);
-		$("input[name=showarms]").prop(`checked`, data.options.show_arms);
-		$("input[name=small]").prop(`checked`, data.options.small);
-		$("input[name=marker]").prop(`checked`, data.options.marker);
-		$("input[name=center-corrected]").prop(`checked`, data.options.center_corrected);
-		
-		$("input[name=rotation]").val(data.rotation.main);
-		$("input[name=headX]").val(data.rotation.head[0]);
-		$("input[name=headY]").val(data.rotation.head[1]);
-		$("input[name=headZ]").val(data.rotation.head[2]);
-		
-		$("input[name=bodyX]").val(data.rotation.body[0]);
-		$("input[name=bodyY]").val(data.rotation.body[1]);
-		$("input[name=bodyZ]").val(data.rotation.body[2]);
-		
-		$("input[name=leftLegX]").val(data.rotation.legs.left[0]);
-		$("input[name=leftLegY]").val(data.rotation.legs.left[1]);
-		$("input[name=leftLegZ]").val(data.rotation.legs.left[2]);
-		
-		$("input[name=rightLegX]").val(data.rotation.legs.right[0]);
-		$("input[name=rightLegY]").val(data.rotation.legs.right[1]);
-		$("input[name=rightLegZ]").val(data.rotation.legs.right[2]);
-		
-		$("input[name=leftArmX]").val(data.rotation.arms.left[0]);
-		$("input[name=leftArmY]").val(data.rotation.arms.left[1]);
-		$("input[name=leftArmZ]").val(data.rotation.arms.left[2]);
-		
-		$("input[name=rightArmX]").val(data.rotation.arms.right[0]);
-		$("input[name=rightArmY]").val(data.rotation.arms.right[1]);
-		$("input[name=rightArmZ]").val(data.rotation.arms.right[2]);
-		
-		$("input[name=useequipment]").prop(`checked`, data.equipment.enabled);
-		$(`input[name=equipShoes]`).val(data.equipment.boots);
-		$(`input[name=equipLeggings]`).val(data.equipment.leggings);
-		$(`input[name=equipChestplate]`).val(data.equipment.chestplate);
-		$(`input[name=equipHelmet]`).val(data.equipment.helmet);
-		$(`input[name=equipHandRight]`).val(data.equipment.hands.right);
-		$(`input[name=equipHandLeft]`).val(data.equipment.hands.left);
-		$(`#equipCustomHeadMode`).val(data.equipment.helmet_specifies);
-		
-		$(`#helmetcolor`).css(`background-color`, data.equipment.leather_colours.helmet);
-		$(`#chestplatecolor`).css(`background-color`, data.equipment.leather_colours.chestplate);
-		$(`#leggingscolor`).css(`background-color`, data.equipment.leather_colours.leggings);
-		$(`#shoecolor`).css(`background-color`, data.equipment.leather_colours.boots);
-		
-		getLeatherColorString($("#helmetcolor"))
-		getLeatherColorString($("#chestplatecolor"))
-		getLeatherColorString($("#leggingscolor"))
-		getLeatherColorString($("#shoecolor"))
-		
-		$(`#customname`).val(data.custom_name.name);
-		$(`input[name=showcustomname]`).prop(`checked`, data.custom_name.show_custom_name);
-		$(`input[name=namecolor]`).val(data.custom_name.name_color);
-		$("input[name=namebold]").prop(`checked`, data.custom_name.options.bold);
-		$("input[name=nameitalic]").prop(`checked`, data.custom_name.options.italic);
-		$("input[name=nameobfuscated]").prop(`checked`, data.custom_name.options.obfuscated);
-		$("input[name=namestrikethrough]").prop(`checked`, data.custom_name.options.strikethrough);
-		
-		$("input[name=usedisabledslots]").prop(`checked`, data.lock_slot_interaction.enabled);
-		
-		$(`#dO`).prop(`checked`, data.lock_slot_interaction.remove.offhand);
-		$(`#dH`).prop(`checked`, data.lock_slot_interaction.remove.helmet);
-		$(`#dC`).prop(`checked`, data.lock_slot_interaction.remove.chestplate);
-		$(`#dL`).prop(`checked`, data.lock_slot_interaction.remove.leggings);
-		$(`#dB`).prop(`checked`, data.lock_slot_interaction.remove.boots);
-		$(`#dW`).prop(`checked`, data.lock_slot_interaction.remove.weapons);
-
-		$(`#rO`).prop(`checked`, data.lock_slot_interaction.replace.offhand);
-		$(`#rH`).prop(`checked`, data.lock_slot_interaction.replace.helmet);
-		$(`#rC`).prop(`checked`, data.lock_slot_interaction.replace.chestplate);
-		$(`#rL`).prop(`checked`, data.lock_slot_interaction.replace.leggings);
-		$(`#rB`).prop(`checked`, data.lock_slot_interaction.replace.boots);
-		$(`#rW`).prop(`checked`, data.lock_slot_interaction.replace.weapons);
-
-		$(`#pO`).prop(`checked`, data.lock_slot_interaction.place.offhand);
-		$(`#pH`).prop(`checked`, data.lock_slot_interaction.place.helmet);
-		$(`#pC`).prop(`checked`, data.lock_slot_interaction.place.chestplate);
-		$(`#pL`).prop(`checked`, data.lock_slot_interaction.place.leggings);
-		$(`#pB`).prop(`checked`, data.lock_slot_interaction.place.boots);
-		$(`#pW`).prop(`checked`, data.lock_slot_interaction.place.weapons);
-		handleInput();
-	} catch (err) {
-		console.error(err);
-		alert(`An error occurred while loading the ArmorStand.`);
-	};
+			$(`#rO`).prop(`checked`, data.lock_slot_interaction.replace.offhand);
+			$(`#rH`).prop(`checked`, data.lock_slot_interaction.replace.helmet);
+			$(`#rC`).prop(`checked`, data.lock_slot_interaction.replace.chestplate);
+			$(`#rL`).prop(`checked`, data.lock_slot_interaction.replace.leggings);
+			$(`#rB`).prop(`checked`, data.lock_slot_interaction.replace.boots);
+			$(`#rW`).prop(`checked`, data.lock_slot_interaction.replace.weapons);
+	
+			$(`#pO`).prop(`checked`, data.lock_slot_interaction.place.offhand);
+			$(`#pH`).prop(`checked`, data.lock_slot_interaction.place.helmet);
+			$(`#pC`).prop(`checked`, data.lock_slot_interaction.place.chestplate);
+			$(`#pL`).prop(`checked`, data.lock_slot_interaction.place.leggings);
+			$(`#pB`).prop(`checked`, data.lock_slot_interaction.place.boots);
+			$(`#pW`).prop(`checked`, data.lock_slot_interaction.place.weapons);*/
+			handleInput();
+		} catch (err) {
+			console.error(err);
+			alert(`An error occurred while loading the ArmorStand.`);
+		};
+	})});
 };

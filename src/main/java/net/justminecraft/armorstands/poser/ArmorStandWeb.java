@@ -1,5 +1,6 @@
 package net.justminecraft.armorstands.poser;
 
+import com.google.gson.JsonObject;
 import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitScheduler;
 
@@ -65,6 +66,7 @@ public class ArmorStandWeb implements Runnable {
                     String query = url.getQuery();
                     String armorStandNbt2 = null;
                     String inputJson = null;
+                    String requestData = null;
                     if(query != null) {
                         path = path.replace(query, "");
                         for (String q : query.split("&")) {
@@ -72,48 +74,62 @@ public class ArmorStandWeb implements Runnable {
                                 armorStandNbt2 = URLDecoder.decode(q.substring("armorStandNbt=".length()), "UTF-8");
                             if (q.startsWith("armorstandSaveData="))
                                 inputJson = URLDecoder.decode(q.substring("armorstandSaveData=".length()), "UTF-8");
+                            if (q.startsWith("requestData="))
+                                requestData = URLDecoder.decode(q.substring("requestData=".length()), "UTF-8");
                         }
                     }
                     String armorStandNbt = armorStandNbt2;
                     if(armorStands.containsKey(path)) {
                         Entity ar = armorStands.get(path);
                         String content = "An error occurred";
-
-                        if(armorStandNbt == null) {
-                            if(inputJson == null) {
-
-                            }
-                            InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/index.htm");
-                            byte[] c = new byte[16000];
-                            int l = in.read(c);
-                            content = new String(c, 0, l, StandardCharsets.UTF_8);
-                            content = content.replaceAll("\\{WORLD\\}", ar.getWorld().getName())
-                                    .replaceAll("\\{X\\}", String.valueOf(ar.getLocation().getX()))
-                                    .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
-                                    .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
+                        if(requestData != null) {
+                            JsonObject jsonContent = new JsonObject();
+                            jsonContent = nbtHandler.getNBTWebInput(ar);
+                            out.write("HTTP/1.1 200 OK\r\n".getBytes());
+                            out.write("Content-Type: application/json; charset=UTF-8\r\n".getBytes());
+                            out.write(("Content-Length: " + jsonContent.toString().length() + "\r\n").getBytes());
+                            out.write("Server: ArmorStandPoser\r\n".getBytes());
+                            out.write("Connection: keep-alive\r\n".getBytes());
+                            out.write("\r\n".getBytes());
+                            out.write(jsonContent.toString().getBytes(StandardCharsets.UTF_8));
+                            out.flush();
                         } else {
-                            if(ar.isValid()) {
-                                content = "Updated Armor Stand";
-                                String toSendNbt = nbtHandler.getWebFormattedNBT(ar, armorStandNbt);
-                                if(toSendNbt == null) {
-                                    content = "There was an error";
-                                } else {
-                                    plugin.getServer().getScheduler().runTask(plugin, () -> {
-                                        nbtHandler.setNBT(ar, toSendNbt);
-                                    });
+                            if(armorStandNbt == null) {
+                                if(inputJson == null) {
+
                                 }
+                                InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/index.htm");
+                                byte[] c = new byte[16000];
+                                int l = in.read(c);
+                                content = new String(c, 0, l, StandardCharsets.UTF_8);
+                                content = content.replaceAll("\\{WORLD\\}", ar.getWorld().getName())
+                                        .replaceAll("\\{X\\}", String.valueOf(ar.getLocation().getX()))
+                                        .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
+                                        .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
                             } else {
-                                content = "The Armor Stand May of been deleted.";
+                                if(ar.isValid()) {
+                                    content = "Updated Armor Stand";
+                                    String toSendNbt = nbtHandler.getWebFormattedNBT(ar, armorStandNbt);
+                                    if(toSendNbt == null) {
+                                        content = "There was an error";
+                                    } else {
+                                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                                            nbtHandler.setNBT(ar, toSendNbt);
+                                        });
+                                    }
+                                } else {
+                                    content = "The Armor Stand May of been deleted.";
+                                }
                             }
+                            out.write("HTTP/1.1 200 OK\r\n".getBytes());
+                            out.write("Content-Type: text/html; charset=UTF-8\r\n".getBytes());
+                            out.write(("Content-Length: " + content.length() + "\r\n").getBytes());
+                            out.write("Server: ArmorStandPoser\r\n".getBytes());
+                            out.write("Connection: keep-alive\r\n".getBytes());
+                            out.write("\r\n".getBytes());
+                            out.write(content.getBytes(StandardCharsets.UTF_8));
+                            out.flush();
                         }
-                        out.write("HTTP/1.1 200 OK\r\n".getBytes());
-                        out.write("Content-Type: text/html; charset=UTF-8\r\n".getBytes());
-                        out.write(("Content-Length: " + content.length() + "\r\n").getBytes());
-                        out.write("Server: ArmorStandPoser\r\n".getBytes());
-                        out.write("Connection: keep-alive\r\n".getBytes());
-                        out.write("\r\n".getBytes());
-                        out.write(content.getBytes(StandardCharsets.UTF_8));
-                        out.flush();
                     } else {
                         System.out.println(path);
                         String content = "404 Not Found";
