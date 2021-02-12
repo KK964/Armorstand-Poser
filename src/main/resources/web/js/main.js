@@ -534,36 +534,41 @@ function generateCode(){
 }
 
 function getHandRightItem(){
-	if(equipHandRight == "") return "{}";
+	if(!equipHandRight || equipHandRight == "") return "{}";
+	if(equipHandRight.startsWith("{")) return equipHandRight;
 	return "{id:\""+ getNbt(equipHandRight)+"}";
 }
 
 function getHandLeftItem(){
-	if(equipHandLeft == "") return "{}";
+	if(!equipHandLeft || equipHandLeft == "") return "{}";
+	if(equipHandLeft.startsWith("{")) return equipHandLeft;
 	return "{id:\""+getNbt(equipHandLeft)+"}";
 }
 
 function getShoesItem(){
-	if(equipShoes == "") return "{}";
+	if(!equipShoes || equipShoes == "") return "{}";
+	if(equipShoes.startsWith("{")) return equipShoes;
 	return "{id:\""+getNbt(equipShoes)
 		+getLeatherColorString($("#shoecolor"), isLeatherArmor(equipShoes))+"}";
 }
 
 function getLeggingsItem(){
-	if(equipLeggings == "") return "{}";
+	if(!equipLeggings || equipLeggings == "") return "{}";
+	if(equipLeggings.startsWith("{")) return equipLeggings;
 	return "{id:\""+getNbt(equipLeggings)
 		+getLeatherColorString($("#leggingscolor"), isLeatherArmor(equipLeggings))+"}";
 }
 
 function getChestplateItem(){
-	if(equipChestplate == "") return "{}";
+	if(!equipChestplate || equipChestplate == "") return "{}";
+	if(equipChestplate.startsWith("{")) return equipChestplate;
 	return "{id:\""+getNbt(equipChestplate)
 		+getLeatherColorString($("#chestplatecolor"), isLeatherArmor(equipChestplate))+"}";
 }
 
 function getHeadItem(){
-	if(equipHelmet == "") return "{}";
-
+	if(!equipHelmet || equipHelmet == "") return "{}";
+	if(equipHelmet.startsWith("{")) return equipHelmet;
 	// Use input as item
 	if(equipCustomHeadMode == "item"){
 		return "{id:\""+getNbt(equipHelmet)+
@@ -677,6 +682,10 @@ function calculateDisabledSlotsFlag() {
 
 	var result = dR + rR + pR;
 	return result;
+}
+
+function reverseDisabled(data) {
+	data = parseInt(data);
 }
 
 function isZero(vector){
@@ -803,6 +812,10 @@ function setToInt(data) {
 	return parseInt(data.slice(0, 3));
 }
 
+function stringToBool(data) {
+	return (data=="true"||data=="1b");
+}
+
 function loadData() {
 	var url=window.location.href,
 	separator = (url.indexOf("?")===-1)?"?":"&",
@@ -811,18 +824,18 @@ function loadData() {
 	newUrl+=newParam;
 	fetch(newUrl).then((response) => {response.json().then((data) => {
 		try {
-			if(data.hasOwnProperty("Invisible") && data.Invisible=="1b")
-				$("input[name=invisible]").prop(`checked`, true);
-			if(data.hasOwnProperty("Invulnerable") && data.Invulnerable=="1b")
-				$("input[name=invulnerable]").prop(`checked`, true);
-			if(data.hasOwnProperty("NoBasePlate") && data.NoBasePlate=="1b")
-				$("input[name=nobaseplate]").prop(`checked`, true);
-			if(data.hasOwnProperty("NoGravity") && data.NoGravity=="1b")
-				$("input[name=nogravity]").prop(`checked`, true);
-			if(data.hasOwnProperty("ShowArms") && data.ShowArms=="1b")
-				$("input[name=showarms]").prop(`checked`, true);
-			if(data.hasOwnProperty("Small") && data.Small=="1b")
-				$("input[name=small]").prop(`checked`, true);
+			if(data.hasOwnProperty("Invisible"))
+				$("input[name=invisible]").prop(`checked`, stringToBool(data.Invisible));
+			if(data.hasOwnProperty("Invulnerable"))
+				$("input[name=invulnerable]").prop(`checked`, stringToBool(data.Invulnerable));
+			if(data.hasOwnProperty("NoBasePlate"))
+				$("input[name=nobaseplate]").prop(`checked`, stringToBool(data.NoBasePlate));
+			if(data.hasOwnProperty("NoGravity"))
+				$("input[name=nogravity]").prop(`checked`, stringToBool(data.NoGravity));
+			if(data.hasOwnProperty("ShowArms"))
+				$("input[name=showarms]").prop(`checked`, stringToBool(data.ShowArms));
+			if(data.hasOwnProperty("Small"))
+				$("input[name=small]").prop(`checked`, stringToBool(data.Small));
 			
 			if(data.hasOwnProperty("Rotation"))
 				$("input[name=rotation]").val(setToInt(data.Rotation[0]));
@@ -860,35 +873,50 @@ function loadData() {
 				}
 			}
 
+			if(data.hasOwnProperty("HandItems") || data.hasOwnProperty("ArmorItems")) {
+				var setArmor=false;
+				if(data.hasOwnProperty("HandItems")) {
+					if(data.HandItems[0] !="{}" || data.HandItems[1] !="{}") {
+						setArmor=true;
+						if(data.HandItems[0] !="{}")
+							$(`input[name=equipHandRight]`).val(data.HandItems[0]);
+						if(data.HandItems[1] !="{}")
+							$(`input[name=equipHandLeft]`).val(data.HandItems[1]);
+					}
+				}
+				if(data.hasOwnProperty("ArmorItems")) {
+					if(data.ArmorItems[0] !="{}" || data.ArmorItems[1] !="{}" || data.ArmorItems[2] !="{}" || data.ArmorItems[3] !="{}") {
+						setArmor=true;
+						if(data.ArmorItems[0] !="{}")
+							$(`input[name=equipShoes]`).val(data.ArmorItems[0]);
+						if(data.ArmorItems[1] !="{}")
+							$(`input[name=equipLeggings]`).val(data.ArmorItems[1]);
+						if(data.ArmorItems[2] !="{}")
+							$(`input[name=equipChestplate]`).val(data.ArmorItems[2]);
+						if(data.ArmorItems[3] !="{}")
+							$(`input[name=equipHelmet]`).val(data.ArmorItems[3]);
+					}
+				}
+				$("input[name=useequipment]").prop(`checked`, setArmor);
+			}
+
+			if(data.hasOwnProperty("CustomName")) {
+				if(data.CustomName.hasOwnProperty("text"))
+					$(`#customname`).val(data.CustomName.text);
+				if(data.CustomName.hasOwnProperty("bold"))
+					$("input[name=namebold]").prop(`checked`, stringToBool(data.CustomName.bold));
+				if(data.CustomName.hasOwnProperty("italic"))
+					$("input[name=nameitalic]").prop(`checked`, stringToBool(data.CustomName.italic));
+				if(data.CustomName.hasOwnProperty("obfuscated"))
+					$("input[name=nameobfuscated]").prop(`checked`, stringToBool(data.CustomName.obfuscated));
+				if(data.CustomName.hasOwnProperty("strikethrough"))
+					$("input[name=namestrikethrough]").prop(`checked`, stringToBool(data.CustomName.strikethrough));
+				if(data.CustomName.hasOwnProperty("color"))
+					$(`input[name=namecolor]`).val(data.CustomName.color);
+			}
+			if(data.hasOwnProperty("CustomNameVisible"))
+				$(`input[name=showcustomname]`).prop(`checked`, stringToBool(data.CustomNameVisible));
 			/*
-			
-			$("input[name=useequipment]").prop(`checked`, data.equipment.enabled);
-			$(`input[name=equipShoes]`).val(data.equipment.boots);
-			$(`input[name=equipLeggings]`).val(data.equipment.leggings);
-			$(`input[name=equipChestplate]`).val(data.equipment.chestplate);
-			$(`input[name=equipHelmet]`).val(data.equipment.helmet);
-			$(`input[name=equipHandRight]`).val(data.equipment.hands.right);
-			$(`input[name=equipHandLeft]`).val(data.equipment.hands.left);
-			$(`#equipCustomHeadMode`).val(data.equipment.helmet_specifies);
-			
-			$(`#helmetcolor`).css(`background-color`, data.equipment.leather_colours.helmet);
-			$(`#chestplatecolor`).css(`background-color`, data.equipment.leather_colours.chestplate);
-			$(`#leggingscolor`).css(`background-color`, data.equipment.leather_colours.leggings);
-			$(`#shoecolor`).css(`background-color`, data.equipment.leather_colours.boots);
-			
-			getLeatherColorString($("#helmetcolor"))
-			getLeatherColorString($("#chestplatecolor"))
-			getLeatherColorString($("#leggingscolor"))
-			getLeatherColorString($("#shoecolor"))
-			
-			$(`#customname`).val(data.custom_name.name);
-			$(`input[name=showcustomname]`).prop(`checked`, data.custom_name.show_custom_name);
-			$(`input[name=namecolor]`).val(data.custom_name.name_color);
-			$("input[name=namebold]").prop(`checked`, data.custom_name.options.bold);
-			$("input[name=nameitalic]").prop(`checked`, data.custom_name.options.italic);
-			$("input[name=nameobfuscated]").prop(`checked`, data.custom_name.options.obfuscated);
-			$("input[name=namestrikethrough]").prop(`checked`, data.custom_name.options.strikethrough);
-			
 			$("input[name=usedisabledslots]").prop(`checked`, data.lock_slot_interaction.enabled);
 			
 			$(`#dO`).prop(`checked`, data.lock_slot_interaction.remove.offhand);

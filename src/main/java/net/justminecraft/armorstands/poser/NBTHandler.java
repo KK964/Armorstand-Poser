@@ -152,10 +152,16 @@ public class NBTHandler {
 
     private JsonArray itemArray(String itemString) {
         JsonArray array = new JsonArray();
-        String[] items = itemString.split("(?<=(})),(?=(\\{id:))");
+        itemString = itemString.replaceFirst("\\[", "");
+        itemString = replaceLast(itemString, "]", "");
+        String[] items = itemString.split("(?<=(})),(?=((\\{id:|\\{})))");
         for(String item : items) {
             array.add(item);
         }
         return array;
+    }
+
+    private String replaceLast(String text, String regex, String replacement) {
+        return text.replaceFirst("(?s)(.*)" + regex, "$1" + replacement);
     }
 }
