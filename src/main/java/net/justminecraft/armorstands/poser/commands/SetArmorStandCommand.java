@@ -26,10 +26,15 @@ public class SetArmorStandCommand extends SubCommand {
 
     @Override
     public boolean onCommand(CommandSender sender, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("This is a player only command.");
+            return false;
+        }
+
         Player player = (Player) sender;
 
         Plot plot = JustPlots.getPlotAt(player.getLocation());
-        if (plot == null || (!plot.isAdded(player.getUniqueId()) && !sender.isOp())) {
+        if ((plot == null && !sender.hasPermission("ase.editanywhere")) || (!plot.isAdded(player.getUniqueId()) && !sender.hasPermission("ase.set.other"))) {
             player.sendMessage(ChatColor.RED + "You do not have permission to build here.");
             return false;
         }
@@ -39,6 +44,13 @@ public class SetArmorStandCommand extends SubCommand {
         if(armorStand == null) {
             player.sendMessage(ChatColor.RED + "You are not looking at an armor stand.");
             lookingAtArmorstand.highlightArmorStands(player);
+            return false;
+        }
+
+        Plot armorStandPlot = JustPlots.getPlotAt(armorStand);
+
+        if(!sender.hasPermission("ase.editanywhere") && (armorStandPlot == null || armorStandPlot != plot)) {
+            player.sendMessage(ChatColor.RED + "You cannot edit this Armor Stand.");
             return false;
         }
 
@@ -54,5 +66,14 @@ public class SetArmorStandCommand extends SubCommand {
 
     @Override
     public void onTabComplete(CommandSender sender, String[] args, List<String> tabCompletion) {
+    }
+
+    @Override
+    public String getPermission() {
+        return getPerm();
+    }
+
+    private static String getPerm() {
+        return "ase.set";
     }
 }

@@ -27,6 +27,8 @@ permissions:
     description: Get link for web editor on others plots
   ase.set.autosave:
     description: Autosave data on web editor
+  ase.editanywhere:
+    description: Allow user to use commands anywhere
   ase.user:
     description: All the user permissions
     default: true
@@ -42,3 +44,4 @@ permissions:
       ase.data.show.other: true
       ase.edit.other: true
       ase.set.other: true
+      ase.editanywhere: true

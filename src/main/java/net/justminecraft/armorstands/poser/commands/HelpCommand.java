@@ -49,7 +49,7 @@ public class HelpCommand extends SubCommand {
             } catch (NumberFormatException ignore) {}
         }
 
-        sender.sendMessage(ChatColor.AQUA + "--------- " + ChatColor.WHITE + "Help: JustPlots (" + page + "/" + pages + ")" + ChatColor.AQUA + " -------------------");
+        sender.sendMessage(ChatColor.AQUA + "--------- " + ChatColor.WHITE + "Help: ArmorStandEditor (" + page + "/" + pages + ")" + ChatColor.AQUA + " -------------------");
 
         if (page < pages) {
             String nextPage = "/p " + (label.isEmpty() ? "" : label + " ") + (page + 1);

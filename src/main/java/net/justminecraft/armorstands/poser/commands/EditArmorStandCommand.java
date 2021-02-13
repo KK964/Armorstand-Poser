@@ -26,15 +26,20 @@ public class EditArmorStandCommand extends SubCommand {
     private ArmorStand armorStand;
 
     public EditArmorStandCommand() {
-        super("/ase edit <option> [boolean]","edit","Edit boolean armorstand data");
+        super("/ase edit <option> [boolean]","edit","Edit boolean armorstand data", "edit");
     }
 
     @Override
     public boolean onCommand(CommandSender sender, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("This is a player only command.");
+            return false;
+        }
+
         player = (Player) sender;
 
         Plot plot = JustPlots.getPlotAt(player.getLocation());
-        if (plot == null || (!plot.isAdded(player.getUniqueId()) && !sender.isOp())) {
+        if ((plot == null && !sender.hasPermission("ase.editanywhere")) || (!plot.isAdded(player.getUniqueId()) && !sender.hasPermission("ase.edit.other"))) {
             player.sendMessage(ChatColor.RED + "You do not have permission to build here.");
             return false;
         }
@@ -43,6 +48,13 @@ public class EditArmorStandCommand extends SubCommand {
 
         if(armorStand == null) {
             player.sendMessage(ChatColor.RED + "You are not looking at an armor stand.");
+            return false;
+        }
+
+        Plot armorStandPlot = JustPlots.getPlotAt(armorStand);
+
+        if(!sender.hasPermission("ase.editanywhere") && (armorStandPlot == null || armorStandPlot != plot)) {
+            player.sendMessage(ChatColor.RED + "You cannot edit this Armor Stand.");
             return false;
         }
 
@@ -163,5 +175,14 @@ public class EditArmorStandCommand extends SubCommand {
                 tabCompletion.add("false");
             }
         }
+    }
+
+    @Override
+    public String getPermission() {
+        return getPerm();
+    }
+
+    private static String getPerm() {
+        return "ase.edit";
     }
 }

@@ -50,7 +50,6 @@ public class ArmorStandCommand implements CommandExecutor, TabCompleter {
         for (String alias : command.getAliases()) {
             commands.put(alias, command);
         }
-        commands.put(command.getName(), command);
 
         helpCommand.addCommand(command);
     }
@@ -73,7 +72,7 @@ public class ArmorStandCommand implements CommandExecutor, TabCompleter {
             if (subCommand != null) {
                 String[] newArgs = new String[args.length - 1];
                 System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                Bukkit.getScheduler().runTask(plugin, () -> {
                     try {
                         subCommand.onCommand(sender, args[0], newArgs);
                     } catch (Exception e) {
