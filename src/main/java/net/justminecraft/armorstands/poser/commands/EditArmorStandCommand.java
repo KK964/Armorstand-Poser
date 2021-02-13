@@ -14,8 +14,9 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-public class EditArmorStandCommand implements CommandExecutor {
-    private final ArmorStandPoserPlugin plugin;
+import java.util.List;
+
+public class EditArmorStandCommand extends SubCommand {
     private Player player;
     private LookingAtArmorstand lookingAtArmorstand = new LookingAtArmorstand();
     private NBTHandler nbtHandler = new NBTHandler();
@@ -24,12 +25,12 @@ public class EditArmorStandCommand implements CommandExecutor {
 
     private ArmorStand armorStand;
 
-    public EditArmorStandCommand(ArmorStandPoserPlugin plugin) {
-        this.plugin = plugin;
+    public EditArmorStandCommand() {
+        super("/ase edit <option> [boolean]","edit","Edit boolean armorstand data");
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, String label, String[] args) {
         player = (Player) sender;
 
         Plot plot = JustPlots.getPlotAt(player.getLocation());
@@ -142,6 +143,25 @@ public class EditArmorStandCommand implements CommandExecutor {
             player.sendMessage(ChatColor.GREEN + "Successfully set \"" + var + "\" to \"" + out + "\".");
         } else {
             player.sendMessage(ChatColor.RED + "Failed to set \"" + var + "\" to \"" + out + "\".");
+        }
+    }
+
+
+    @Override
+    public void onTabComplete(CommandSender sender, String[] args, List<String> tabCompletion) {
+        if(args.length == 1) {
+            tabCompletion.add("visible");
+            tabCompletion.add("small");
+            tabCompletion.add("basePlate");
+            tabCompletion.add("gravity");
+            tabCompletion.add("showArms");
+            tabCompletion.add("invulnerable");
+        }
+        if(args.length == 2) {
+            if(editTypes.getType(args[0].toLowerCase()) == "boolean") {
+                tabCompletion.add("true");
+                tabCompletion.add("false");
+            }
         }
     }
 }

@@ -17,17 +17,15 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SetArmorStandCommand implements CommandExecutor {
-
-    private final ArmorStandPoserPlugin plugin;
+public class SetArmorStandCommand extends SubCommand {
     private LookingAtArmorstand lookingAtArmorstand = new LookingAtArmorstand();
 
-    public SetArmorStandCommand(ArmorStandPoserPlugin plugin) {
-        this.plugin = plugin;
+    public SetArmorStandCommand() {
+        super("/ase setarmorstand", "setarmorstand", "Get link to edit armorstand with the web editor", "set", "s");
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
 
         Plot plot = JustPlots.getPlotAt(player.getLocation());
@@ -47,10 +45,14 @@ public class SetArmorStandCommand implements CommandExecutor {
         lookingAtArmorstand.highlightArmorStand((ArmorStand) armorStand);
 
         player.sendMessage(ChatColor.GREEN + "Click here to set armor stand:");
-        String s = plugin.armorStandWeb.createHandler(armorStand);
+        String s = ArmorStandPoserPlugin.getArmorStandWeb().createHandler(armorStand);
         player.spigot().sendMessage(new ComponentBuilder(s).color(net.md_5.bungee.api.ChatColor.WHITE)
                 .event(new ClickEvent(ClickEvent.Action.OPEN_URL, s)).create());
 
         return true;
+    }
+
+    @Override
+    public void onTabComplete(CommandSender sender, String[] args, List<String> tabCompletion) {
     }
 }

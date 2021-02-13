@@ -66,6 +66,7 @@ public class ArmorStandWeb implements Runnable {
                     String armorStandNbt2 = null;
                     String inputJson = null;
                     String requestData = null;
+                    String exit = null;
                     if(query != null) {
                         path = path.replace(query, "");
                         for (String q : query.split("&")) {
@@ -75,6 +76,8 @@ public class ArmorStandWeb implements Runnable {
                                 inputJson = URLDecoder.decode(q.substring("armorstandSaveData=".length()), "UTF-8");
                             if (q.startsWith("requestData="))
                                 requestData = URLDecoder.decode(q.substring("requestData=".length()), "UTF-8");
+                            if (q.startsWith("exit="))
+                                exit = URLDecoder.decode(q.substring("exit=".length()), "UTF-8");
                         }
                     }
                     String armorStandNbt = armorStandNbt2;
@@ -93,11 +96,14 @@ public class ArmorStandWeb implements Runnable {
                             out.write(jsonContent.toString().getBytes(StandardCharsets.UTF_8));
                             out.flush();
                         } else {
+                            if(exit != null) {
+                                armorStands.remove(path);
+                            }
                             if(armorStandNbt == null) {
                                 if(inputJson == null) {
 
                                 }
-                                InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/index.htm");
+                                InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/index.htm");
                                 byte[] c = new byte[16000];
                                 int l = in.read(c);
                                 content = new String(c, 0, l, StandardCharsets.UTF_8);
@@ -135,7 +141,7 @@ public class ArmorStandWeb implements Runnable {
                             String contentType = "text/html";
                             switch (path) {
                                 case "/style.css": {
-                                    InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/style.css");
+                                    InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/style.css");
                                     byte[] c = new byte[4500];
                                     int l = in.read(c);
                                     contentType = "text/css";
@@ -143,7 +149,7 @@ public class ArmorStandWeb implements Runnable {
                                     break;
                                 }
                                 case "/js/colorpick.js": {
-                                    InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/colorpick.js");
+                                    InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/js/colorpick.js");
                                     byte[] c = new byte[25000];
                                     int l = in.read(c);
                                     contentType = "text/javascript";
@@ -151,7 +157,7 @@ public class ArmorStandWeb implements Runnable {
                                     break;
                                 }
                                 case "/js/colorpick.css": {
-                                    InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/colorpick.css");
+                                    InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/js/colorpick.css");
                                     byte[] c = new byte[10000];
                                     int l = in.read(c);
                                     contentType = "text/css";
@@ -159,7 +165,7 @@ public class ArmorStandWeb implements Runnable {
                                     break;
                                 }
                                 case "/js/main.js": {
-                                    InputStream in = ArmorStandPoserPlugin.armorStandPoserPlugin.getResource("web/js/main.js");
+                                    InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/js/main.js");
                                     byte[] c = new byte[55000];
                                     int l = in.read(c);
                                     contentType = "text/javascript";

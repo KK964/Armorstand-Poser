@@ -1,9 +1,6 @@
 package net.justminecraft.armorstands.poser;
 
-import net.justminecraft.armorstands.poser.commands.ArmorStandCommand;
-import net.justminecraft.armorstands.poser.commands.EditArmorStandCommand;
-import net.justminecraft.armorstands.poser.commands.SetArmorStandCommand;
-import net.justminecraft.armorstands.poser.commands.TabComplete;
+import net.justminecraft.armorstands.poser.commands.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,18 +10,23 @@ import java.io.InputStream;
 
 public class ArmorStandPoserPlugin extends JavaPlugin {
 
-    public static ArmorStandPoserPlugin armorStandPoserPlugin;
+    private static ArmorStandPoserPlugin armorStandPoserPlugin;
+    private static ArmorStandWeb armorStandWeb;
+    private static ArmorStandCommand armorStandCommand;
 
     public static File DATA_FOLDER;
     public static InputStream WEB_FOLDER;
 
-    public ArmorStandWeb armorStandWeb;
+    public static ArmorStandPoserPlugin getPlugin() {
+        return armorStandPoserPlugin;
+    }
 
     @Override
     public void onEnable() {
         armorStandPoserPlugin = this;
         DATA_FOLDER = getDataFolder();
         WEB_FOLDER = getResource("web");
+        armorStandCommand = new ArmorStandCommand(this);
 
         try {
             armorStandWeb = new ArmorStandWeb(this);
@@ -33,8 +35,6 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
             e1.printStackTrace();
         }
 
-        registerCommands();
-        registerTabComplete();
         getLogger().info("Just Armor Stands Poser Enabled!");
     }
 
@@ -46,13 +46,11 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
         } catch (Exception ignored) {}
     }
 
-    private void registerCommands() {
-        getCommand("armorstand").setExecutor(new ArmorStandCommand(this));
-        getCommand("setarmorstand").setExecutor(new SetArmorStandCommand(this));
-        getCommand("editarmorstand").setExecutor(new EditArmorStandCommand(this));
+    public static ArmorStandWeb getArmorStandWeb() {
+        return getPlugin().armorStandWeb;
     }
 
-    private void registerTabComplete() {
-        getCommand("editarmorstand").setTabCompleter(new TabComplete());
+    public static ArmorStandCommand getCommandExecuter() {
+        return getPlugin().armorStandCommand;
     }
 }

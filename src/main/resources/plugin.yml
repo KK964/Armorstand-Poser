@@ -6,19 +6,39 @@ author: KK964
 depend: [JustPlots]
 commands:
   armorstand:
-    description: Get an armorstands data.
-    aliases: []
-    permission: getarmorstand
-  setarmorstand:
-    description: Set an armorstands data.
-    aliases: [sas]
-    permission: setarmorstand
-  editarmorstand:
-    description: Edit an armorstands data.
-    aliases: [eas]
-    permission: setarmorstand
+    description: ArmorStandEditor command
+    aliases: [ase, ast, armorstandeditor, ae]
 permissions:
-  setarmorstand:
+  ase.data.nbt:
+    description: Get data for an armorstand.
+  ase.data.nbt.other:
+    description: Get data for an armorstand on others plots
+  ase.data.show:
+    description: Show all armorstands in radius
+  ase.data.show.other:
+    description: Show all armorstands in radius on others plots
+  ase.edit:
+    description: Edit an armorstands data
+  ase.edit.other:
+    description: Edit an armorstand on others plots
+  ase.set:
+    description: Get link for web editor
+  ase.set.other:
+    description: Get link for web editor on others plots
+  ase.set.autosave:
+    description: Autosave data on web editor
+  ase.user:
+    description: All the user permissions
+    default: true
+    children:
+      ase.data.nbt: true
+      ase.data.show: true
+  ase.mod:
     default: op
-  getarmorstand:
-    default: op
+    description: All the admin permissions
+    children:
+      ase.user: true
+      ase.data.nbt.other: true
+      ase.data.show.other: true
+      ase.edit.other: true
+      ase.set.other: true

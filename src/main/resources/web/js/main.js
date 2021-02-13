@@ -106,7 +106,10 @@ $(document).ready(function(){
 		handleInput();
 	});
 
-	//updateURL
+	window.onbeforeunload = function(){
+		return safeExit();
+	};
+	//save
 	$("#save")
 	.mousedown(function(event){
 	var url=window.location.href,
@@ -116,9 +119,10 @@ $(document).ready(function(){
     newUrl+=newParam;
 	fetch(newUrl).then((response) => {response.text().then((text) => {alert(text)})});
 	});
+	//exit
 	$("#exit")
 	.mousedown(function(event){
-		close();
+		safeExit();
 	});
 
 	$("#gl")
@@ -160,6 +164,15 @@ $(document).ready(function(){
 		}
 	});
 });
+
+function safeExit() {
+	var url=window.location.href,
+	separator = (url.indexOf("?")===-1)?"?":"&",
+	newParam=separator + "exit=true";
+	newUrl=url.replace(newParam,"");
+	newUrl+=newParam;
+	fetch(newUrl).then((response) => {response.text().then((text) => {return close()})});
+}
 
 function loadScreen() {
 	$(`#creationname`).attr(`placeholder`, `My Armor Stand #${localStorage.length + 1}`);
@@ -696,7 +709,10 @@ function reverseDisabled(data) {
 		if ((data-integer[i])>=0) {
 			total = data-integer[i];
 			bin = Math.pow(2,i);
-			if(integer.includes(bin))
+			var pre;
+			for(var e of binaryValues)
+				pre+=e;
+			if(integer.includes(bin) && pre <= data)
 				binaryValues.push(bin);
 		}
 	}
@@ -937,7 +953,7 @@ function loadData() {
 				var disabledSlots = reverseDisabled(data.DisabledSlots);
 				for(var i of disabledSlots) {
 					//remove 1,2,4,8,16,32
-					if(i==1)
+					if(i==1 || data.DisabledSlots=="1")
 						$(`#dW`).prop(`checked`, true); //weapon
 					if(i==2)
 						$(`#dB`).prop(`checked`, true); //boots
