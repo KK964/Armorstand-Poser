@@ -21,7 +21,7 @@ public class ArmorStandWeb implements Runnable {
     private final ArmorStandPoserPlugin plugin;
 
     public ArmorStandWeb(ArmorStandPoserPlugin plugin) throws IOException {
-        serverSocket = new ServerSocket(2058);
+        serverSocket = new ServerSocket(plugin.getConfig().getInt("port"));
         this.plugin = plugin;
     }
 
@@ -46,7 +46,7 @@ public class ArmorStandWeb implements Runnable {
             armorStands.clear();
         armorStands.put(s, e);
         autoSaveMap.put(s, autoSave);
-        return "http://arthangout.art:" + serverSocket.getLocalPort() + s;
+        return plugin.getConfig().getString("ip") + ":" + serverSocket.getLocalPort() + s;
     }
 
     class Handler extends Thread {

@@ -2,6 +2,7 @@ package net.justminecraft.armorstands.poser;
 
 import net.justminecraft.armorstands.poser.commands.*;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -23,6 +24,7 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         armorStandPoserPlugin = this;
         DATA_FOLDER = getDataFolder();
         WEB_FOLDER = getResource("web");
@@ -50,6 +52,9 @@ public class ArmorStandPoserPlugin extends JavaPlugin {
         return getPlugin().armorStandWeb;
     }
 
+    public static FileConfiguration getConfigFile() {
+        return getPlugin().getConfig();
+    }
     public static ArmorStandCommand getCommandExecuter() {
         return getPlugin().armorStandCommand;
     }
