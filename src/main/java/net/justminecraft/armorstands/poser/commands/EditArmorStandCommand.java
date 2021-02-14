@@ -1,14 +1,11 @@
 package net.justminecraft.armorstands.poser.commands;
 
 import net.justminecraft.armorstands.poser.ArmorStandData;
-import net.justminecraft.armorstands.poser.ArmorStandPoserPlugin;
 import net.justminecraft.armorstands.poser.LookingAtArmorstand;
 import net.justminecraft.armorstands.poser.NBTHandler;
 import net.justminecraft.plots.JustPlots;
 import net.justminecraft.plots.Plot;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
