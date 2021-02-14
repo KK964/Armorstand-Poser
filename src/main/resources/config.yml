@@ -1,2 +1,9 @@
-ip: 0.0.0.0
+publicAddress: 0.0.0.0
 port: 2058
+addPortInUrl: true
+# publicAddress: <http://url.com / 123.456.7890>
+## ip sent to user in chat on /ase set
+# port: <1025 - 60000>
+## port to set websocket to
+# addPortInUrl: <boolean>
+## add the port to the url sent to player
