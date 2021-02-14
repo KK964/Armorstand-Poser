@@ -57,7 +57,14 @@ public class SetArmorStandCommand extends SubCommand {
         lookingAtArmorstand.highlightArmorStand((ArmorStand) armorStand);
 
         player.sendMessage(ChatColor.GREEN + "Click here to set armor stand:");
-        String s = ArmorStandPoserPlugin.getArmorStandWeb().createHandler(armorStand);
+        String s;
+
+        if(player.hasPermission("ase.set.autosave")) {
+            s = ArmorStandPoserPlugin.getArmorStandWeb().createHandler(armorStand, true);
+        } else {
+            s = ArmorStandPoserPlugin.getArmorStandWeb().createHandler(armorStand);
+        }
+
         player.spigot().sendMessage(new ComponentBuilder(s).color(net.md_5.bungee.api.ChatColor.WHITE)
                 .event(new ClickEvent(ClickEvent.Action.OPEN_URL, s)).create());
 

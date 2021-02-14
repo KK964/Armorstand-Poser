@@ -12,34 +12,12 @@ var mBasePlate, mBody, mHead, mSkull, mLegLeft, mLegRight, mArmLeft, mArmRight;
 var armorstand, armorstandWrapper
 
 var mcVersion = "1.16";
+var initialized = false;
+var invisible = false, invulnerable = false, noBasePlate = false, noGravity = false, showArms = false, small = false;
 
-var invisible = false;
-var invulnerable = false;
-var noBasePlate = false;
-var noGravity = false;
-var showArms = false;
-var small = false;
+var useEquipment, equipHandRight, equipHandLeft, equipShoes, equipLeggings, equipChestplate, equipHelmet = "", equipCustomHeadMode, equipColorShoes, equipColorLeggings, equipColorChestplate, equipColorHelmet;
 
-var useEquipment;
-var equipHandRight;
-var equipHandLeft;
-var equipShoes;
-var equipLeggings;
-var equipChestplate;
-var equipHelmet = "";
-var equipCustomHeadMode;
-var equipColorShoes;
-var equipColorLeggings;
-var equipColorChestplate;
-var equipColorHelmet;
-
-var customName;
-var showCustomName;
-var nameColor;
-var nameBold;
-var nameItalic;
-var nameobfuscated;
-var nameStrikethrough;
+var customName, showCustomName, nameColor, nameBold, nameItalic, nameobfuscated, nameStrikethrough;
 
 var useDisabledSlots;
 
@@ -95,15 +73,16 @@ $(document).ready(function(){
 	setup();
 	updateUI();
 	render();
-	loadScreen();
 	loadData();
 
 	//Stuff to handle and update input
 	$("input").on("input", function(){
 		handleInput();
+		autoSave();
 	});
 	$(':checkbox, #equipCustomHeadMode, #equipmode, #mcversion').change(function() {
 		handleInput();
+		autoSave();
 	});
 
 	window.onbeforeunload = function(){
@@ -112,11 +91,7 @@ $(document).ready(function(){
 	//save
 	$("#save")
 	.mousedown(function(event){
-	var url=window.location.href,
-    	separator = (url.indexOf("?")===-1)?"?":"&",
-    	newParam=separator + "armorStandNbt="+generateCode();
-    newUrl=url.replace(newParam,"");
-    newUrl+=newParam;
+	var newUrl = getNewUrl("armorStandNbt="+generateCode());
 	fetch(newUrl).then((response) => {response.text().then((text) => {alert(text)})});
 	});
 	//exit
@@ -165,29 +140,27 @@ $(document).ready(function(){
 	});
 });
 
-function safeExit() {
-	var url=window.location.href,
-	separator = (url.indexOf("?")===-1)?"?":"&",
-	newParam=separator + "exit=true";
-	newUrl=url.replace(newParam,"");
-	newUrl+=newParam;
-	fetch(newUrl).then((response) => {response.text().then((text) => {return close()})});
+function autoSave() {
+	console.log('Updating');
+	if(initialized == true && $('#auto-save').length > 0 && $('#auto-save').is(":checked")) {
+		var newUrl = getNewUrl("armorStandNbt="+generateCode());
+		fetch(newUrl).then((response) => {response.text().then((text) => {})});
+	}
 }
 
-function loadScreen() {
-	$(`#creationname`).attr(`placeholder`, `My Armor Stand #${localStorage.length + 1}`);
-	if (!localStorage.length) {
-		$(`#loadlistopts`).hide();
-		$(`#loadmessage`).text(`You do not have any creations to load!`);
-	} else {
-		$(`#loadlistopts`).show();
-		$(`#loadmessage`).text(`Load your saved creations`);
-		$(`#loadlist`).empty();
-		for (let i = 0; i < localStorage.length; i++) {
-			$(`#loadlist`).append(`<option value="${localStorage.key(i)}">${localStorage.key(i)}</option>`);
-		};
-	};
-};
+function getNewUrl(sep) {
+	var url=window.location.href,
+	separator = (url.indexOf("?")===-1)?"?":"&",
+	newParam=separator + sep;
+	newUrl=url.replace(newParam,"");
+	newUrl+=newParam;
+	return newUrl;
+}
+
+function safeExit() {
+	var newUrl = getNewUrl("exit=true");
+	fetch(newUrl).then((response) => {response.text().then((text) => {return close()})});
+}
 
 function setup(){
 	width = $("#gl").width();
@@ -218,9 +191,6 @@ function setup(){
 		matStone);
 	mmBaseDot.position.set(0,mBasePlate.position.y,10/16);
 	armorstandWrapper.add(mmBaseDot);
-
-	// To Generate the other body parts, we will use a mesh to display,
-	// and add it as a child to the object that serves as a pivot.
 
 	//Left Leg
 	var mmLegLeft = new THREE.Mesh(
@@ -460,10 +430,7 @@ function updateUI(){
 
 function generateCode(){
 	var code = "{" 
-
 	var tags = [];
-
-	//CheckBoxes
 	if(invisible) 
 		tags.push("Invisible:1b") 
 	else 
@@ -488,13 +455,8 @@ function generateCode(){
 		tags.push("Small:1b")
 	else
 		tags.push("Small:0b");
-
-	//Sliders
 	tags.push("Rotation:["+rotation+"f]");
-
-	// Equipment
 	var armor = [];
-
 	armor.push(getShoesItem() || "{}");
 	armor.push(getLeggingsItem() || "{}");
 	armor.push(getChestplateItem() || "{}");
@@ -504,8 +466,6 @@ function generateCode(){
 	hands.push(getHandRightItem() || "{}");
 	hands.push(getHandLeftItem() || "{}");
 	tags.push("HandItems:["+hands.join(",")+"]");
-
-	// Custom name
 	if(customName) {
 		let name = [];
 		name.push(getName().replaceAll("\\", ""));
@@ -522,14 +482,10 @@ function generateCode(){
 		tags.push("CustomNameVisible:1b")
 	else 
 		tags.push("CustomNameVisible:0b");
-
-	//DisabledSlots
 	if(useDisabledSlots)
 		tags.push("DisabledSlots:"+calculateDisabledSlotsFlag())
 	else
 		tags.push("DisabledSlots:"+ "0");
-
-	//Now the pose
 	var pose = [];
 	pose.push("Body:"+getJSONArray(body));
 	pose.push("Head:"+getJSONArray(head));
@@ -538,9 +494,7 @@ function generateCode(){
 
 	pose.push("LeftArm:"+getJSONArray(leftArm));
 	pose.push("RightArm:"+getJSONArray(rightArm));
-
 	tags.push("Pose:{"+pose.join(",")+"}");
-
 	code += tags.join(",");
 	code += "}";
 	return code;
@@ -743,16 +697,12 @@ function getMouseDeltaY(){
 
 function render(){
 	renderer.render(scene, camera);
-
 	var deltaTime = clock.getDelta();
-
 	armorstandWrapper.rotation.y = rotY + getMouseDeltaX();
 	armorstandWrapper.rotation.x = rotX + getMouseDeltaY();
 
 	requestAnimationFrame(render);
 }
-
-// ---- Additional functions
 
 // From here: http://stackoverflow.com/a/8809472/1456971
 function generateUUID(){
@@ -784,7 +734,6 @@ function generateIntArray() {
 
 function getDecimalRGB(rgb){
 	//The string has the format 'rgb(r, g, b)'
-
 	//Remove whitespaces. Now formatted: 'rgb(r,g,b)'
 	rgb = rgb.replace(/ /g,"");
 
@@ -802,7 +751,6 @@ function isLeatherArmor(item){
 	return item.indexOf("leather") == 0;
 }
 
-// Pass the colorpicker element as element. If condition is true, it will return a proper datatag for use in items, otherwise it will return an empty string.
 function getLeatherColorString(element, condition){
 	if(condition){
 		var rgb = getDecimalRGB(element.css("background-color"));
@@ -848,11 +796,7 @@ function stringToBool(data) {
 }
 
 function loadData() {
-	var url=window.location.href,
-	separator = (url.indexOf("?")===-1)?"?":"&",
-	newParam=separator + "requestData=true";
-	newUrl=url.replace(newParam,"");
-	newUrl+=newParam;
+	var newUrl = getNewUrl("requestData=true");
 	fetch(newUrl).then((response) => {response.json().then((data) => {
 		try {
 			if(data.hasOwnProperty("Invisible"))
@@ -994,6 +938,7 @@ function loadData() {
 				}
 			}
 			handleInput();
+			initialized = true;
 		} catch (err) {
 			console.error(err);
 			alert(`An error occurred while loading the ArmorStand.`);

@@ -17,6 +17,8 @@ public class ArmorStandWeb implements Runnable {
     NBTHandler nbtHandler = new NBTHandler();
     ServerSocket serverSocket;
     private HashMap<String, Entity> armorStands = new HashMap<>();
+    private HashMap<String, Boolean> autoSaveMap = new HashMap<>();
+
     private final ArmorStandPoserPlugin plugin;
 
     public ArmorStandWeb(ArmorStandPoserPlugin plugin) throws IOException {
@@ -36,10 +38,15 @@ public class ArmorStandWeb implements Runnable {
     }
 
     public String createHandler(Entity e) {
+        return createHandler(e, false);
+    }
+
+    public String createHandler(Entity e, Boolean autoSave) {
         String s = "/" + Long.toString(new Random().nextLong(), 16);
         if(armorStands.size() > 100)
             armorStands.clear();
         armorStands.put(s, e);
+        autoSaveMap.put(s, autoSave);
         return "http://arthangout.art:" + serverSocket.getLocalPort() + s;
     }
 
@@ -98,6 +105,8 @@ public class ArmorStandWeb implements Runnable {
                         } else {
                             if(exit != null) {
                                 armorStands.remove(path);
+                                autoSaveMap.remove(path);
+                                return;
                             }
                             if(armorStandNbt == null) {
                                 if(inputJson == null) {
@@ -111,6 +120,8 @@ public class ArmorStandWeb implements Runnable {
                                         .replaceAll("\\{X\\}", String.valueOf(ar.getLocation().getX()))
                                         .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
                                         .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
+                                if(autoSaveMap.containsKey(path) && autoSaveMap.get(path) == true)
+                                        content.replaceAll("<!--AutoSave\\?\\?\\?-->", "<label><input id=\"auto-save\" type=\"checkbox\" name=\"auto-save\">Auto Save</label><br>");
                             } else {
                                 if(ar.isValid()) {
                                     content = "Updated Armor Stand";
