@@ -18,7 +18,9 @@ var invisible = false, invulnerable = false, noBasePlate = false, noGravity = fa
 var useEquipment, equipHandRight, equipHandLeft, equipShoes, equipLeggings, equipChestplate, equipHelmet = "", equipCustomHeadMode, equipColorShoes, equipColorLeggings, equipColorChestplate, equipColorHelmet;
 
 var customName, showCustomName, nameColor, nameBold, nameItalic, nameobfuscated, nameStrikethrough;
-
+String.prototype.trimEllip = function (length) {
+	return this.length > length ? this.substring(0, length) + "..." : this;
+}
 var useDisabledSlots;
 
 //The rotation values are all in degrees.
@@ -141,7 +143,6 @@ $(document).ready(function(){
 });
 
 function autoSave() {
-	console.log('Updating');
 	if(initialized == true && $('#auto-save').length > 0 && $('#auto-save').is(":checked")) {
 		var newUrl = getNewUrl("armorStandNbt="+generateCode());
 		fetch(newUrl).then((response) => {response.text().then((text) => {})});
@@ -312,6 +313,7 @@ function handleInput(){
 	equipColorHelmet = $("#helmetcolor").css("background-color");
 
 	customName = getInput("customname");
+	customName = customName.trimEllip(100);
 	showCustomName = getCheckBoxInput("showcustomname");
 	nameColor = getInput("namecolor");
 	nameBold = getCheckBoxInput("namebold");
