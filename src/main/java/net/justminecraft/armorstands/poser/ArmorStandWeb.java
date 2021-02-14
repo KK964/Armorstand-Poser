@@ -40,7 +40,7 @@ public class ArmorStandWeb implements Runnable {
         return createHandler(e, false);
     }
 
-    public String createHandler(Entity e, Boolean autoSave) {
+    public String createHandler(Entity e, boolean autoSave) {
         String s = "/" + Long.toString(new Random().nextLong(), 16);
         if(armorStands.size() > 100)
             armorStands.clear();
@@ -114,13 +114,15 @@ public class ArmorStandWeb implements Runnable {
                                 InputStream in = ArmorStandPoserPlugin.getPlugin().getResource("web/index.htm");
                                 byte[] c = new byte[16000];
                                 int l = in.read(c);
+                                String autoSaveReplacement = "";
+                                if(autoSaveMap.containsKey(path) && autoSaveMap.get(path) == true)
+                                    autoSaveReplacement = "<label><input id=\"auto-save\" type=\"checkbox\" name=\"auto-save\">Auto Save</label><br>";
                                 content = new String(c, 0, l, StandardCharsets.UTF_8);
                                 content = content.replaceAll("\\{WORLD\\}", ar.getWorld().getName())
                                         .replaceAll("\\{X\\}", String.valueOf(ar.getLocation().getX()))
                                         .replaceAll("\\{Y\\}", String.valueOf(ar.getLocation().getY()))
-                                        .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()));
-                                if(autoSaveMap.containsKey(path) && autoSaveMap.get(path) == true)
-                                        content.replaceAll("<!--AutoSave\\?\\?\\?-->", "<label><input id=\"auto-save\" type=\"checkbox\" name=\"auto-save\">Auto Save</label><br>");
+                                        .replaceAll("\\{Z\\}", String.valueOf(ar.getLocation().getZ()))
+                                        .replaceAll("AUTOSAVEREPLACEME", autoSaveReplacement);
                             } else {
                                 if(ar.isValid()) {
                                     content = "Updated Armor Stand";
