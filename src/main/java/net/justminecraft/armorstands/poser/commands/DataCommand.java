@@ -17,7 +17,7 @@ public class DataCommand extends SubCommand {
     NBTHandler nbtHandler = new NBTHandler();
 
     public DataCommand() {
-        super("/ase data <option>", "data", "Get data of an armorstand", "data");
+        super("/ase other <option>", "other", "Use useful tools for editing armor stands", "other");
     }
 
     @Override
@@ -36,13 +36,6 @@ public class DataCommand extends SubCommand {
         }
 
         Entity armorStand = lookingAtArmorstand.getEntities(player);
-
-        Plot armorStandPlot = JustPlots.getPlotAt(armorStand);
-
-        if(armorStand != null && (!sender.hasPermission("ase.editanywhere") && (armorStandPlot == null || armorStandPlot != plot))) {
-            player.sendMessage(ChatColor.RED + "You cannot edit this Armor Stand.");
-            return false;
-        }
 
         if(args.length > 0) {
             switch (args[0]) {

@@ -14,7 +14,7 @@ public class HelpCommand extends SubCommand {
     private List<SubCommand> commands = new ArrayList<>();
 
     public HelpCommand() {
-        super("/ase help [page]", "List all commands", "help");
+        super("/ase help [page]","help", "List all commands", "help");
     }
 
     public void addCommand(SubCommand command) {
@@ -49,7 +49,7 @@ public class HelpCommand extends SubCommand {
             } catch (NumberFormatException ignore) {}
         }
 
-        sender.sendMessage(ChatColor.AQUA + "--------- " + ChatColor.WHITE + "Help: ArmorStandEditor (" + page + "/" + pages + ")" + ChatColor.AQUA + " -------------------");
+        sender.sendMessage(ChatColor.LIGHT_PURPLE + "--- " + ChatColor.WHITE + "Help: ArmorStandEditor (" + page + "/" + pages + ")" + ChatColor.LIGHT_PURPLE + " ---");
 
         if (page < pages) {
             String nextPage = "/p " + (label.isEmpty() ? "" : label + " ") + (page + 1);
@@ -72,7 +72,7 @@ public class HelpCommand extends SubCommand {
                 commandText.append("* ").color(ChatColor.GOLD).bold(true);
             }
 
-            commandText.append(usage).color(ChatColor.AQUA).bold(false)
+            commandText.append(usage).color(ChatColor.LIGHT_PURPLE).bold(false)
                     .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(usage).create()))
                     .event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, usage))
                     .append(": " + command.getDescription()).reset();

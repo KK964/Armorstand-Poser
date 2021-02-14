@@ -24,7 +24,7 @@ public class ArmorStandCommand implements CommandExecutor, TabCompleter {
         PluginCommand armorStand = plugin.getCommand("armorstand");
 
         if (armorStand == null) {
-            throw new RuntimeException("Could not find command /justplots (is it registered in the plugin.yml?)");
+            throw new RuntimeException("Could not find command /armorstand (is it registered in the plugin.yml?)");
         }
 
         armorStand.setExecutor(this);
@@ -34,6 +34,7 @@ public class ArmorStandCommand implements CommandExecutor, TabCompleter {
         addCommand(new SetArmorStandCommand());
         addCommand(new DataCommand());
         addCommand(new EditArmorStandCommand());
+        addCommand(new MoveCommand());
         addCommand(helpCommand);
 
         // Any future commands added will be marked as custom commands

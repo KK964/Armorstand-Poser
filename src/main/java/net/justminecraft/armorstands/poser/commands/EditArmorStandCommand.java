@@ -26,7 +26,7 @@ public class EditArmorStandCommand extends SubCommand {
     private ArmorStand armorStand;
 
     public EditArmorStandCommand() {
-        super("/ase edit <option> [boolean]","edit","Edit boolean armorstand data", "edit");
+        super("/ase boolean <option> [boolean]","boolean","Edit boolean armorstand data", "boolean", "bool");
     }
 
     @Override

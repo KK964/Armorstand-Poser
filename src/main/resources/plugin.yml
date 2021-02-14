@@ -17,6 +17,10 @@ permissions:
     description: Show all armorstands in radius
   ase.data.show.other:
     description: Show all armorstands in radius on others plots
+  ase.move:
+    description: Move armorstand
+  ase.move.other:
+    description: Move armorstand on other plots
   ase.edit:
     description: Edit an armorstands data
   ase.edit.other:
@@ -35,13 +39,30 @@ permissions:
     children:
       ase.data.nbt: true
       ase.data.show: true
+  ase.user.elevated:
+    description: All perms users can get
+    children:
+      ase.user: true
+      ase.move: true
+      ase.set: true
+      ase.edit: true
+  ase.donater:
+    description: Donater permissions
+    children:
+      ase.set.autosave: true
   ase.mod:
+    description: All the mod permissions
+    children:
+      ase.user: true
+      ase.donater: true
+      ase.data.nbt.other: true
+      ase.data.show.other: true
+  ase.admin:
     default: op
     description: All the admin permissions
     children:
-      ase.user: true
-      ase.data.nbt.other: true
-      ase.data.show.other: true
+      ase.mod: true
+      ase.move.other: true
       ase.edit.other: true
       ase.set.other: true
       ase.editanywhere: true
