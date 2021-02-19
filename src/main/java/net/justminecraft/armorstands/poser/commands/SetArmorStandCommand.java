@@ -16,7 +16,7 @@ public class SetArmorStandCommand extends SubCommand {
     private LookingAtArmorstand lookingAtArmorstand = new LookingAtArmorstand();
 
     public SetArmorStandCommand() {
-        super("/ase setarmorstand", "setarmorstand", "Get link to edit armorstand with the web editor", "set", "s");
+        super("/ase setarmorstand", "setarmorstand", "Get link to edit armorstand with the web editor", "setarmorstand", "set", "s");
     }
 
     @Override
