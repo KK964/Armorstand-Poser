@@ -46,15 +46,15 @@ permissions:
       ase.move: true
       ase.set: true
       ase.edit: true
-  ase.donater:
-    description: Donater permissions
+  ase.donator:
+    description: Donator permissions
     children:
       ase.set.autosave: true
   ase.mod:
     description: All the mod permissions
     children:
       ase.user: true
-      ase.donater: true
+      ase.donator: true
       ase.data.nbt.other: true
       ase.data.show.other: true
   ase.admin:
