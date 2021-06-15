@@ -3,9 +3,9 @@ package net.justminecraft.armorstands.poser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_16_R3.MojangsonParser;
-import net.minecraft.server.v1_16_R3.NBTTagCompound;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.MojangsonParser;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 
@@ -16,15 +16,15 @@ import java.util.Set;
 
 public class NBTHandler {
     public String getNBT(Entity e) {
-        net.minecraft.server.v1_16_R3.Entity nms = ((CraftEntity) e).getHandle();
+        net.minecraft.world.entity.Entity nms = ((CraftEntity) e).getHandle();
         NBTTagCompound nbt = new NBTTagCompound();
-        nms.a_(nbt);
+        nms.d(nbt);
         return nbt.toString();
     }
 
     public void setNBT(Entity e, String value) {
         if(value == null) return;
-        net.minecraft.server.v1_16_R3.Entity nms = ((CraftEntity) e).getHandle();
+        net.minecraft.world.entity.Entity nms = ((CraftEntity) e).getHandle();
         NBTTagCompound nbtv;
         try {
             nbtv = MojangsonParser.parse(value);
@@ -75,9 +75,9 @@ public class NBTHandler {
                 "DisabledSlots",
                 "Pose"));
 
-        net.minecraft.server.v1_16_R3.Entity nms = ((CraftEntity) e).getHandle();
+        net.minecraft.world.entity.Entity nms = ((CraftEntity) e).getHandle();
         NBTTagCompound nbt = new NBTTagCompound();
-        nms.a_(nbt);
+        nms.d(nbt);
 
         Set<String> keys = new HashSet<>(nbt.getKeys());
         JsonObject formattedNBT = new JsonObject();
